@@ -45,6 +45,7 @@ export const LabelDetailAlbumList = ({ albums }: LabelDetailAlbumListProps) => {
         ALBUM_CARD_ROWS.name,
         ALBUM_CARD_ROWS.albumArtists,
         ALBUM_CARD_ROWS.releaseYear,
+        ALBUM_CARD_ROWS.catalogNumberAlways,
     ] as Array<CardRow<Album | AlbumArtist | Artist>>;
 
     return (

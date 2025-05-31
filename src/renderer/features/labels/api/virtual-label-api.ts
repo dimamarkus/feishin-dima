@@ -1,7 +1,7 @@
 import { Label, LabelAggregationService } from '../services/label-aggregation';
 
 import { api } from '/@/renderer/api';
-import { AlbumListSort, SortOrder } from '/@/shared/types/domain-types';
+import { Album, AlbumListSort, SortOrder } from '/@/shared/types/domain-types';
 import { ServerListItem } from '/@/shared/types/types';
 
 export type LabelListArgs = {
@@ -73,16 +73,45 @@ export class VirtualLabelAPI {
     }): Promise<Label | null> {
         const { apiClientProps, labelId } = args;
 
-        // Fetch all albums
-        const albums = await this.getAllAlbums(apiClientProps);
+        // 1. Fetch all album summaries to identify labels and albums per label
+        const allAlbumSummaries = await this.getAllAlbums(apiClientProps);
+        const allLabels = LabelAggregationService.extractLabelsFromAlbums(allAlbumSummaries);
+        const targetLabelSummary = allLabels.find((l) => l.id === labelId);
 
-        // Extract all labels
-        const labels = LabelAggregationService.extractLabelsFromAlbums(albums);
+        if (!targetLabelSummary || !apiClientProps.server) {
+            return null;
+        }
 
-        // Find the specific label
-        const label = labels.find((l) => l.id === labelId);
+        // 2. If target label found, fetch full details for its albums
+        // Use Promise.allSettled to avoid failing the whole operation if one album detail fetch fails
+        const detailedAlbumsResults = await Promise.allSettled(
+            targetLabelSummary.albums.map(albumSummary =>
+                api.controller.getAlbumDetail({
+                    apiClientProps,
+                    query: { id: albumSummary.id },
+                })
+            )
+        );
 
-        return label || null;
+        const detailedAlbums: Album[] = [];
+        detailedAlbumsResults.forEach(result => {
+            if (result.status === 'fulfilled' && result.value) {
+                detailedAlbums.push(result.value);
+            } else if (result.status === 'rejected') {
+                // Optionally log the error for the failed album detail fetch
+                console.error(`Failed to fetch album detail:`, result.reason);
+            }
+        });
+
+        // If, for some reason, all detail fetches fail, we might fall back to summary or return as is
+        // For now, we use successfully fetched detailed albums.
+
+        return {
+            ...targetLabelSummary,
+            albums: detailedAlbums,
+            // albumCount should ideally remain consistent with the summary unless an album became inaccessible
+            albumCount: detailedAlbums.length,
+        };
     }
 
     /**
@@ -177,6 +206,16 @@ export class VirtualLabelAPI {
         const albumResponse = await api.controller.getAlbumList({
             apiClientProps: args,
             query: {
+                _custom: {
+                    jellyfin: {
+                        // Request additional fields that might contain catalog numbers
+                        Fields: 'Tags,ProviderIds,UserData,ItemCounts,ChildCount,Path,Overview,RunTimeTicks',
+                    },
+                    navidrome: {
+                        // No specific "includeAllTags" for album list, hoping tags are included by default
+                        // or that relevant ones for catalog numbers are standard.
+                    },
+                },
                 limit: 1000, // Fetch a large batch
                 sortBy: AlbumListSort.NAME,
                 sortOrder: SortOrder.ASC,
