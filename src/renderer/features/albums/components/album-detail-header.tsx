@@ -98,7 +98,7 @@ export const AlbumDetailHeader = forwardRef(
             },
         ];
 
-        // Add label information if available
+        // Add label if available
         const albumLabel =
             detailQuery?.data && LabelAggregationService.getAlbumLabel(detailQuery.data);
         if (albumLabel) {
@@ -117,6 +117,14 @@ export const AlbumDetailHeader = forwardRef(
                         {albumLabel}
                     </Text>
                 ),
+            });
+        }
+
+        // Add catalog number if available
+        if (detailQuery?.data?.catalogNumber) {
+            metadataItems.push({
+                id: 'catalogNumber',
+                value: detailQuery.data.catalogNumber,
             });
         }
 

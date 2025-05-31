@@ -255,6 +255,19 @@ const normalizeAlbum = (
     server: null | ServerListItem,
     imageSize?: number,
 ): Album => {
+    // Extract catalog number from tags
+    let catalogNumber: null | string = null;
+    const tags = getTags(item);
+    if (tags) {
+        const catalogTags = ['catalogNumber', 'catalognumber', 'labelno', 'label_no', 'catalog'];
+        for (const tagName of catalogTags) {
+            if (tags[tagName] && tags[tagName].length > 0) {
+                catalogNumber = tags[tagName][0];
+                break;
+            }
+        }
+    }
+
     return {
         albumArtist: item.AlbumArtist,
         albumArtists:
@@ -269,6 +282,7 @@ const normalizeAlbum = (
             name: entry.Name,
         })),
         backdropImageUrl: null,
+        catalogNumber,
         comment: null,
         createdAt: item.DateCreated,
         duration: item.RunTimeTicks / 10000,

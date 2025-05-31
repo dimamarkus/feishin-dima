@@ -245,6 +245,7 @@ const normalizeAlbum = (
         albumArtist: item.artist,
         ...getArtists(item),
         backdropImageUrl: null,
+        catalogNumber: null,
         comment: null,
         createdAt: item.created,
         duration: item.duration * 1000,

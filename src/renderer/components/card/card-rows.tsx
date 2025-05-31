@@ -103,6 +103,14 @@ export const CardRows = ({ data, rows }: CardRowsProps) => {
                     );
                 }
 
+                // Get the display value for this row
+                const displayValue = row.format ? row.format(data) : data[row.property];
+
+                // Don't render rows with no value, but always render if there's a format function
+                if (!displayValue && displayValue !== 0 && !row.format) {
+                    return null;
+                }
+
                 return (
                     <Row key={`row-${row.property}`}>
                         {row.route ? (
@@ -136,7 +144,7 @@ export const CardRows = ({ data, rows }: CardRowsProps) => {
                                     }, {}),
                                 )}
                             >
-                                {data && (row.format ? row.format(data) : data[row.property])}
+                                {displayValue}
                             </Text>
                         ) : (
                             <Text
@@ -145,7 +153,7 @@ export const CardRows = ({ data, rows }: CardRowsProps) => {
                                 overflow="hidden"
                                 size={index > 0 ? 'sm' : 'md'}
                             >
-                                {data && (row.format ? row.format(data) : data[row.property])}
+                                {displayValue}
                             </Text>
                         )}
                     </Row>
@@ -172,8 +180,24 @@ export const ALBUM_CARD_ROWS: { [key: string]: CardRow<Album> } = {
             slugs: [{ idProperty: 'id', slugProperty: 'albumArtistId' }],
         },
     },
+    catalogNumber: {
+        property: 'catalogNumber',
+    },
+    catalogNumberAlways: {
+        format: (album) => {
+            // Handle null, undefined, empty string, or whitespace-only values
+            if (
+                !album.catalogNumber ||
+                (typeof album.catalogNumber === 'string' && !album.catalogNumber.trim())
+            ) {
+                return '—';
+            }
+            return String(album.catalogNumber).trim();
+        },
+        property: 'catalogNumber',
+    },
     createdAt: {
-        format: (song) => formatDateAbsolute(song.createdAt),
+        format: (album) => formatDateAbsolute(album.createdAt),
         property: 'createdAt',
     },
     duration: {

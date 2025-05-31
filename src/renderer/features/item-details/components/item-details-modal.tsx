@@ -122,6 +122,7 @@ const AlbumPropertyMapping: ItemDetailRow<Album>[] = [
         render: (album) => album.duration && formatDurationString(album.duration),
     },
     { key: 'releaseYear', label: 'filter.releaseYear' },
+    { key: 'catalogNumber', label: 'common.catalogNumber' },
     { key: 'songCount', label: 'filter.songCount' },
     { label: 'filter.isCompilation', render: (album) => BoolField(album.isCompilation || false) },
     {
@@ -233,6 +234,7 @@ const SongPropertyMapping: ItemDetailRow<Song>[] = [
                 </Text>
             ),
     },
+    { key: 'catalogNumber', label: 'common.catalogNumber' },
     { key: 'discNumber', label: 'common.disc' },
     { key: 'trackNumber', label: 'common.trackNumber' },
     { key: 'releaseYear', label: 'filter.releaseYear' },

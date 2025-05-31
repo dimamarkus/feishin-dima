@@ -37,6 +37,7 @@
         "bitrate": "bitrate",
         "bpm": "bpm",
         "cancel": "cancel",
+        "catalogNumber": "catalog number",
         "center": "center",
         "channel_one": "channel",
         "channel_other": "channels",

@@ -218,10 +218,28 @@ const normalizeAlbum = (
 
     const imageBackdropUrl = imageUrl?.replace(/size=\d+/, 'size=1000') || null;
 
+    // Extract catalog number from tags or first song
+    let catalogNumber: null | string = null;
+    if (item.tags) {
+        // Check common catalog number tag names
+        const catalogTags = ['catalogNumber', 'catalognumber', 'labelno', 'label_no', 'catalog'];
+        for (const tagName of catalogTags) {
+            if (item.tags[tagName] && item.tags[tagName].length > 0) {
+                catalogNumber = item.tags[tagName][0];
+                break;
+            }
+        }
+    }
+    // Fallback to first song's catalogNum if available
+    if (!catalogNumber && item.songs && item.songs.length > 0) {
+        catalogNumber = item.songs[0].catalogNum || null;
+    }
+
     return {
         albumArtist: item.albumArtist,
         ...getArtists(item),
         backdropImageUrl: imageBackdropUrl,
+        catalogNumber,
         comment: item.comment || null,
         createdAt: item.createdAt.split('T')[0],
         duration: item.duration !== undefined ? item.duration * 1000 : null,

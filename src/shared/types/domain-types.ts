@@ -157,6 +157,7 @@ export type Album = {
     albumArtists: RelatedArtist[];
     artists: RelatedArtist[];
     backdropImageUrl: null | string;
+    catalogNumber: null | string;
     comment: null | string;
     createdAt: string;
     duration: null | number;
