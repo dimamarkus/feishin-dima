@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { queryKeys } from '/@/renderer/api/query-keys';
 import { Rating, Text } from '/@/renderer/components';
 import { useAlbumDetail } from '/@/renderer/features/albums/queries/album-detail-query';
+import { LabelAggregationService } from '/@/renderer/features/labels/services/label-aggregation';
 import { LibraryHeader, useSetRating } from '/@/renderer/features/shared';
 import { useContainerQuery } from '/@/renderer/hooks';
 import { useSongChange } from '/@/renderer/hooks/use-song-change';
@@ -96,6 +97,28 @@ export const AlbumDetailHeader = forwardRef(
                 }),
             },
         ];
+
+        // Add label information if available
+        const albumLabel =
+            detailQuery?.data && LabelAggregationService.getAlbumLabel(detailQuery.data);
+        if (albumLabel) {
+            const labelId = LabelAggregationService.createLabelId(albumLabel);
+            const labelLink = generatePath(AppRoute.LIBRARY_LABELS_DETAIL, { labelId });
+
+            metadataItems.push({
+                id: 'label',
+                value: (
+                    <Text
+                        $link={true}
+                        component={Link}
+                        to={labelLink}
+                        variant="subtle"
+                    >
+                        {albumLabel}
+                    </Text>
+                ),
+            });
+        }
 
         if (originalDifferentFromRelease) {
             const formatted = `♫ ${formatDateAbsoluteUTC(detailQuery!.data!.originalDate)}`;
