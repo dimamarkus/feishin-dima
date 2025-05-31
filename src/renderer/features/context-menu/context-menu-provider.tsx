@@ -27,11 +27,13 @@ import {
     RiInformationFill,
     RiPlayFill,
     RiPlayListAddFill,
+    RiPriceTag3Fill,
     RiRadio2Fill,
     RiShareForwardFill,
     RiShuffleFill,
     RiStarFill,
 } from 'react-icons/ri';
+import { generatePath } from 'react-router-dom';
 
 import { api } from '/@/renderer/api';
 import { controller } from '/@/renderer/api/controller';
@@ -50,11 +52,13 @@ import {
     useContextMenuEvents,
 } from '/@/renderer/features/context-menu/events';
 import { ItemDetailsModal } from '/@/renderer/features/item-details/components/item-details-modal';
+import { LabelAggregationService } from '/@/renderer/features/labels/services/label-aggregation';
 import { usePlayQueueAdd } from '/@/renderer/features/player';
 import { updateSong } from '/@/renderer/features/player/update-remote-song';
 import { useDeletePlaylist } from '/@/renderer/features/playlists';
 import { useRemoveFromPlaylist } from '/@/renderer/features/playlists/mutations/remove-from-playlist-mutation';
 import { useCreateFavorite, useDeleteFavorite, useSetRating } from '/@/renderer/features/shared';
+import { AppRoute } from '/@/renderer/router/routes';
 import {
     getServerById,
     useAuthStore,
@@ -745,6 +749,18 @@ export const ContextMenuProvider = ({ children }: ContextMenuProviderProps) => {
         }
     }, [ctx.data, server]);
 
+    const handleGoToLabel = useCallback(() => {
+        const item = ctx.data[0];
+        if (item && ctx.type === LibraryItem.ALBUM) {
+            const label = LabelAggregationService.getAlbumLabel(item);
+            if (label) {
+                const labelId = LabelAggregationService.createLabelId(label);
+                const labelPath = generatePath(AppRoute.LIBRARY_LABELS_DETAIL, { labelId });
+                window.location.href = `#${labelPath}`;
+            }
+        }
+    }, [ctx.data, ctx.type]);
+
     const contextMenuItems: Record<ContextMenuItemType, ContextMenuItem> = useMemo(() => {
         return {
             addToFavorites: {
@@ -782,6 +798,16 @@ export const ContextMenuProvider = ({ children }: ContextMenuProviderProps) => {
                 label: t('page.contextMenu.download', { postProcess: 'sentenceCase' }),
                 leftIcon: <RiDownload2Line size="1.1rem" />,
                 onClick: handleDownload,
+            },
+            goToLabel: {
+                disabled:
+                    ctx.data?.length !== 1 ||
+                    ctx.type !== LibraryItem.ALBUM ||
+                    !LabelAggregationService.getAlbumLabel(ctx.data[0]),
+                id: 'goToLabel',
+                label: t('page.contextMenu.goToLabel', { postProcess: 'sentenceCase' }),
+                leftIcon: <RiPriceTag3Fill size="1.1rem" />,
+                onClick: handleGoToLabel,
             },
             moveToBottomOfQueue: {
                 id: 'moveToBottomOfQueue',
@@ -923,6 +949,7 @@ export const ContextMenuProvider = ({ children }: ContextMenuProviderProps) => {
         handleOpenItemDetails,
         handlePlay,
         handleUpdateRating,
+        handleGoToLabel,
     ]);
 
     const mergedRef = useMergedRef(ref, clickOutsideRef);

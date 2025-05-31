@@ -78,8 +78,17 @@ export const ALBUM_CONTEXT_MENU_ITEMS: SetContextMenuItems = [
     { id: 'addToFavorites' },
     { id: 'removeFromFavorites' },
     { children: true, disabled: false, divider: true, id: 'setRating' },
-    { divider: true, id: 'shareItem' },
+    { divider: true, id: 'goToLabel' },
+    { id: 'shareItem' },
     { divider: true, id: 'showDetails' },
+];
+
+export const LABEL_CONTEXT_MENU_ITEMS: SetContextMenuItems = [
+    { id: 'play' },
+    { id: 'playLast' },
+    { id: 'playNext' },
+    { divider: true, id: 'playShuffled' },
+    { divider: true, id: 'addToPlaylist' },
 ];
 
 export const GENRE_CONTEXT_MENU_ITEMS: SetContextMenuItems = [
