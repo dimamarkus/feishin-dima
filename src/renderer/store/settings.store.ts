@@ -80,6 +80,12 @@ export const sidebarItems: SidebarItemType[] = [
         route: AppRoute.LIBRARY_GENRES,
     },
     {
+        disabled: false,
+        id: 'Labels',
+        label: i18n.t('page.sidebar.labels'),
+        route: AppRoute.LIBRARY_LABELS,
+    },
+    {
         disabled: true,
         id: 'Playlists',
         label: i18n.t('page.sidebar.playlists'),
@@ -746,10 +752,33 @@ export const useSettingsStore = create<SettingsSlice>()(
                     });
                 }
 
+                if (version === 9) {
+                    const state = persistedState as SettingsSlice;
+                    // Add Labels to existing sidebar configurations if it doesn't exist
+                    const hasLabels = state.general.sidebarItems.some(
+                        (item) => item.id === 'Labels',
+                    );
+                    if (!hasLabels) {
+                        // Find the position after Genres
+                        const genresIndex = state.general.sidebarItems.findIndex(
+                            (item) => item.id === 'Genres',
+                        );
+                        const insertIndex =
+                            genresIndex >= 0 ? genresIndex + 1 : state.general.sidebarItems.length;
+
+                        state.general.sidebarItems.splice(insertIndex, 0, {
+                            disabled: false,
+                            id: 'Labels',
+                            label: i18n.t('page.sidebar.labels'),
+                            route: AppRoute.LIBRARY_LABELS,
+                        });
+                    }
+                }
+
                 return persistedState;
             },
             name: 'store_settings',
-            version: 9,
+            version: 10,
         },
     ),
 );
