@@ -85,16 +85,16 @@ export class VirtualLabelAPI {
         // 2. If target label found, fetch full details for its albums
         // Use Promise.allSettled to avoid failing the whole operation if one album detail fetch fails
         const detailedAlbumsResults = await Promise.allSettled(
-            targetLabelSummary.albums.map(albumSummary =>
+            targetLabelSummary.albums.map((albumSummary) =>
                 api.controller.getAlbumDetail({
                     apiClientProps,
                     query: { id: albumSummary.id },
-                })
-            )
+                }),
+            ),
         );
 
         const detailedAlbums: Album[] = [];
-        detailedAlbumsResults.forEach(result => {
+        detailedAlbumsResults.forEach((result) => {
             if (result.status === 'fulfilled' && result.value) {
                 detailedAlbums.push(result.value);
             } else if (result.status === 'rejected') {
@@ -108,9 +108,9 @@ export class VirtualLabelAPI {
 
         return {
             ...targetLabelSummary,
-            albums: detailedAlbums,
             // albumCount should ideally remain consistent with the summary unless an album became inaccessible
             albumCount: detailedAlbums.length,
+            albums: detailedAlbums,
         };
     }
 

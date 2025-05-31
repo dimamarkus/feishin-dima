@@ -4,6 +4,7 @@ export type Label = {
     albumCount: number;
     albums: Album[]; // albums from this label
     id: string; // derived from label name
+    imageUrl: null | string; // virtual property for mosaic display
     name: string;
 };
 
@@ -46,6 +47,7 @@ export class LabelAggregationService {
             albumCount: data.albums.length,
             albums: data.albums,
             id: labelId,
+            imageUrl: this.generateLabelImageUrl(data.albums),
             name: data.name,
         }));
     }
@@ -58,6 +60,22 @@ export class LabelAggregationService {
 
         const term = searchTerm.toLowerCase();
         return labels.filter((label) => label.name.toLowerCase().includes(term));
+    }
+
+    /**
+     * Generates a virtual image URL for a label based on its albums
+     * This is used as a flag to indicate the label should use mosaic display
+     */
+    static generateLabelImageUrl(albums: Album[]): null | string {
+        // Check if any album has an image
+        const albumsWithImages = albums.filter((album) => album.imageUrl);
+
+        if (albumsWithImages.length === 0) {
+            return null;
+        }
+
+        // Return a virtual URL that indicates mosaic display should be used
+        return 'mosaic://label-albums';
     }
 
     /**

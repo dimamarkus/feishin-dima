@@ -234,7 +234,6 @@ const SongPropertyMapping: ItemDetailRow<Song>[] = [
                 </Text>
             ),
     },
-    { key: 'catalogNumber', label: 'common.catalogNumber' },
     { key: 'discNumber', label: 'common.disc' },
     { key: 'trackNumber', label: 'common.trackNumber' },
     { key: 'releaseYear', label: 'filter.releaseYear' },

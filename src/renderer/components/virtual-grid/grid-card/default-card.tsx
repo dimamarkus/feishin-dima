@@ -8,6 +8,7 @@ import styled from 'styled-components';
 import { CardRows } from '/@/renderer/components/card';
 import { Skeleton } from '/@/renderer/components/skeleton';
 import { GridCardControls } from '/@/renderer/components/virtual-grid/grid-card/grid-card-controls';
+import { LabelAlbumMosaic } from '/@/renderer/features/labels/components/label-album-mosaic';
 import {
     Album,
     AlbumArtist,
@@ -30,6 +31,7 @@ interface BaseGridCardProps {
         handlePlayQueueAdd: (options: PlayQueueAddOptions) => void;
         itemGap: number;
         itemType: LibraryItem;
+        itemWidth?: number;
         playButtonBehavior: Play;
         resetInfiniteLoaderCache: () => void;
         route: CardRoute;
@@ -186,7 +188,13 @@ export const DefaultCard = ({
             >
                 <InnerCardContainer>
                     <ImageContainer $isFavorite={data?.userFavorite}>
-                        {data?.imageUrl ? (
+                        {controls.itemType === LibraryItem.LABEL &&
+                        data?.imageUrl === 'mosaic://label-albums' ? (
+                            <LabelAlbumMosaic
+                                albums={data.albums || []}
+                                size={controls.itemWidth || 200}
+                            />
+                        ) : data?.imageUrl ? (
                             <Image
                                 importance="auto"
                                 placeholder={data?.imagePlaceholderUrl || 'var(--placeholder-bg)'}
