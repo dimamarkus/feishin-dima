@@ -44,6 +44,8 @@ export const LibraryHeader = forwardRef(
                     return t('entity.albumArtist', { count: 1 });
                 case LibraryItem.ARTIST:
                     return t('entity.artist', { count: 1 });
+                case LibraryItem.LABEL:
+                    return t('entity.label', { count: 1 });
                 case LibraryItem.PLAYLIST:
                     return t('entity.playlist', { count: 1 });
                 case LibraryItem.SONG:

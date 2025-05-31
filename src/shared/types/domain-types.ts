@@ -32,6 +32,7 @@ export enum LibraryItem {
     ALBUM_ARTIST = 'albumArtist',
     ARTIST = 'artist',
     GENRE = 'genre',
+    LABEL = 'label',
     PLAYLIST = 'playlist',
     SONG = 'song',
 }

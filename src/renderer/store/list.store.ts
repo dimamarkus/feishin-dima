@@ -572,6 +572,39 @@ export const useListStore = create<ListSlice>()(
                             scrollOffset: 0,
                         },
                     },
+                    label: {
+                        display: ListDisplayType.TABLE,
+                        filter: {
+                            sortBy: 'name',
+                            sortOrder: SortOrder.ASC,
+                        },
+                        grid: { itemGap: 10, itemSize: 200, scrollOffset: 0 },
+                        table: {
+                            autoFit: true,
+                            columns: [
+                                {
+                                    column: TableColumn.ROW_INDEX,
+                                    width: 50,
+                                },
+                                {
+                                    column: TableColumn.TITLE,
+                                    width: 400,
+                                },
+                                {
+                                    column: TableColumn.ALBUM_COUNT,
+                                    width: 100,
+                                },
+                            ],
+                            pagination: {
+                                currentPage: 1,
+                                itemsPerPage: 100,
+                                totalItems: 1,
+                                totalPages: 1,
+                            },
+                            rowHeight: 30,
+                            scrollOffset: 0,
+                        },
+                    },
                     playlist: {
                         display: ListDisplayType.POSTER,
                         filter: {

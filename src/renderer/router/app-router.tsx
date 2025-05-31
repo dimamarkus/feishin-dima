@@ -60,6 +60,14 @@ const DummyAlbumDetailRoute = lazy(
 
 const GenreListRoute = lazy(() => import('/@/renderer/features/genres/routes/genre-list-route'));
 
+const LabelListRoute = lazy(
+    () => import('/@/renderer/features/labels/routes/label-list-route-enhanced'),
+);
+
+const LabelDetailRoute = lazy(
+    () => import('/@/renderer/features/labels/routes/label-detail-route'),
+);
+
 const SettingsRoute = lazy(() => import('/@/renderer/features/settings/routes/settings-route'));
 
 const SearchRoute = lazy(() => import('/@/renderer/features/search/routes/search-route'));
@@ -135,6 +143,18 @@ export const AppRouter = () => {
                                     <Route
                                         element={<SongListRoute />}
                                         path={AppRoute.LIBRARY_GENRES_SONGS}
+                                    />
+                                </Route>
+                                <Route path={AppRoute.LIBRARY_LABELS}>
+                                    <Route
+                                        element={<LabelListRoute />}
+                                        errorElement={<RouteErrorBoundary />}
+                                        index
+                                    />
+                                    <Route
+                                        element={<LabelDetailRoute />}
+                                        errorElement={<RouteErrorBoundary />}
+                                        path={AppRoute.LIBRARY_LABELS_DETAIL}
                                     />
                                 </Route>
                                 <Route

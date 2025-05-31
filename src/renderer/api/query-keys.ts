@@ -21,6 +21,7 @@ import type {
 
 import { QueryFunctionContext } from '@tanstack/react-query';
 
+import { LabelListQuery } from '/@/renderer/features/labels/api/virtual-label-api';
 import { LyricSource } from '/@/shared/types/domain-types';
 
 export const splitPaginatedQuery = (key: any) => {
@@ -173,6 +174,25 @@ export const queryKeys: Record<
             return [serverId, 'genres', 'list'] as const;
         },
         root: (serverId: string) => [serverId, 'genres'] as const,
+    },
+    labels: {
+        list: (serverId: string, query?: LabelListQuery) => {
+            const { filter, pagination } = splitPaginatedQuery(query);
+            if (query && pagination) {
+                return [serverId, 'labels', 'list', filter, pagination] as const;
+            }
+
+            if (query) {
+                return [serverId, 'labels', 'list', filter] as const;
+            }
+
+            return [serverId, 'labels', 'list'] as const;
+        },
+        root: (serverId: string) => [serverId, 'labels'] as const,
+        search: (serverId: string, query?: LabelListQuery) => {
+            if (query) return [serverId, 'labels', 'search', query] as const;
+            return [serverId, 'labels', 'search'] as const;
+        },
     },
     musicFolders: {
         list: (serverId: string) => [serverId, 'musicFolders', 'list'] as const,
