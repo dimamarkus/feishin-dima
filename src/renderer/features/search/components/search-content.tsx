@@ -12,6 +12,7 @@ import { useVirtualTable } from '/@/renderer/components/virtual-table/hooks/use-
 import {
     ALBUM_CONTEXT_MENU_ITEMS,
     ARTIST_CONTEXT_MENU_ITEMS,
+    LABEL_CONTEXT_MENU_ITEMS,
     SONG_CONTEXT_MENU_ITEMS,
 } from '/@/renderer/features/context-menu/context-menu-items';
 import { usePlayQueueAdd } from '/@/renderer/features/player';
@@ -43,6 +44,8 @@ export const SearchContent = ({ tableRef }: SearchContentProps) => {
                 return ALBUM_CONTEXT_MENU_ITEMS;
             case LibraryItem.ALBUM_ARTIST:
                 return ARTIST_CONTEXT_MENU_ITEMS;
+            case LibraryItem.LABEL:
+                return LABEL_CONTEXT_MENU_ITEMS;
             case LibraryItem.SONG:
                 return SONG_CONTEXT_MENU_ITEMS;
             default:
@@ -62,6 +65,9 @@ export const SearchContent = ({ tableRef }: SearchContentProps) => {
                         albumArtistId: e.data.id,
                     }),
                 );
+                break;
+            case LibraryItem.LABEL:
+                navigate(generatePath(AppRoute.LIBRARY_LABELS_DETAIL, { labelId: e.data.id }));
                 break;
             case LibraryItem.SONG:
                 handlePlayQueueAdd?.({
