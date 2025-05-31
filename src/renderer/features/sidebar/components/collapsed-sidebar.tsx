@@ -42,6 +42,7 @@ export const CollapsedSidebar = () => {
             Folders: t('page.sidebar.folders', { postProcess: 'titleCase' }),
             Genres: t('page.sidebar.genres', { postProcess: 'titleCase' }),
             Home: t('page.sidebar.home', { postProcess: 'titleCase' }),
+            Labels: t('page.sidebar.labels', { postProcess: 'titleCase' }),
             'Now Playing': t('page.sidebar.nowPlaying', { postProcess: 'titleCase' }),
             Playlists: t('page.sidebar.playlists', { postProcess: 'titleCase' }),
             Search: t('page.sidebar.search', { postProcess: 'titleCase' }),

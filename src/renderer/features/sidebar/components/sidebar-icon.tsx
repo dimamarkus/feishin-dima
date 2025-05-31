@@ -13,6 +13,8 @@ import {
     RiPlayLine,
     RiPlayListFill,
     RiPlayListLine,
+    RiPriceTag3Fill,
+    RiPriceTag3Line,
     RiSearchFill,
     RiSearchLine,
     RiSettings2Fill,
@@ -51,6 +53,9 @@ export const SidebarIcon = ({ active, route, size }: SidebarIconProps) => {
         case AppRoute.LIBRARY_GENRES:
             if (active) return <RiFlag2Fill size={size} />;
             return <RiFlag2Line size={size} />;
+        case AppRoute.LIBRARY_LABELS:
+            if (active) return <RiPriceTag3Fill size={size} />;
+            return <RiPriceTag3Line size={size} />;
         case AppRoute.LIBRARY_SONGS:
             if (active) return <RiMusic2Fill size={size} />;
             return <RiMusic2Line size={size} />;
