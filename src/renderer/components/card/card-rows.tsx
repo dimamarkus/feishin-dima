@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { Text } from '/@/renderer/components/text';
+import { LabelAggregationService } from '/@/renderer/features/labels/services/label-aggregation';
 import { AppRoute } from '/@/renderer/router/routes';
 import { formatDateAbsolute, formatDateRelative, formatRating } from '/@/renderer/utils/format';
 import { Album, AlbumArtist, Artist, Playlist, Song } from '/@/shared/types/domain-types';
@@ -114,6 +115,20 @@ export const CardRows = ({ data, rows }: CardRowsProps) => {
                                 to={generatePath(
                                     row.route.route,
                                     row.route.slugs?.reduce((acc, slug) => {
+                                        // Special handling for label routes
+                                        if (
+                                            row.property === 'tags' &&
+                                            slug.slugProperty === 'labelId'
+                                        ) {
+                                            const label =
+                                                LabelAggregationService.getAlbumLabel(data);
+                                            return {
+                                                ...acc,
+                                                [slug.slugProperty]: label
+                                                    ? LabelAggregationService.createLabelId(label)
+                                                    : '',
+                                            };
+                                        }
                                         return {
                                             ...acc,
                                             [slug.slugProperty]: data[slug.idProperty],
@@ -164,6 +179,19 @@ export const ALBUM_CARD_ROWS: { [key: string]: CardRow<Album> } = {
     duration: {
         format: (album) => (album.duration === null ? null : formatDuration(album.duration)),
         property: 'duration',
+    },
+    label: {
+        format: (album) => LabelAggregationService.getAlbumLabel(album),
+        property: 'tags',
+        route: {
+            route: AppRoute.LIBRARY_LABELS_DETAIL,
+            slugs: [
+                {
+                    idProperty: 'id',
+                    slugProperty: 'labelId',
+                },
+            ],
+        },
     },
     lastPlayedAt: {
         format: (album) => formatDateRelative(album.lastPlayedAt),
@@ -314,5 +342,18 @@ export const PLAYLIST_CARD_ROWS: { [key: string]: CardRow<Playlist> } = {
     },
     songCount: {
         property: 'songCount',
+    },
+};
+
+export const LABEL_CARD_ROWS: { [key: string]: CardRow<any> } = {
+    albumCount: {
+        property: 'albumCount',
+    },
+    name: {
+        property: 'name',
+        route: {
+            route: AppRoute.LIBRARY_LABELS_DETAIL,
+            slugs: [{ idProperty: 'id', slugProperty: 'labelId' }],
+        },
     },
 };
