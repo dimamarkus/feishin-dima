@@ -116,6 +116,8 @@ export const useVirtualTable = <TFilter extends BaseQuery<any>>({
                 return queryKeys.artists.list;
             case LibraryItem.GENRE:
                 return queryKeys.genres.list;
+            case LibraryItem.LABEL:
+                return queryKeys.labels.list;
             case LibraryItem.PLAYLIST:
                 return queryKeys.playlists.list;
             case LibraryItem.SONG:
@@ -136,6 +138,14 @@ export const useVirtualTable = <TFilter extends BaseQuery<any>>({
                     return api.controller.getArtistList;
                 case LibraryItem.GENRE:
                     return api.controller.getGenreList;
+                case LibraryItem.LABEL:
+                    return async (args: any) => {
+                        const { VirtualLabelAPI } = await import(
+                            '/@/renderer/features/labels/api/virtual-label-api'
+                        );
+                        const result = await VirtualLabelAPI.getLabelList(args);
+                        return result;
+                    };
                 case LibraryItem.PLAYLIST:
                     return api.controller.getPlaylistList;
                 case LibraryItem.SONG:

@@ -148,6 +148,10 @@ export const ALBUM_TABLE_COLUMNS = [
         value: TableColumn.GENRE,
     },
     {
+        label: i18n.t('table.config.label.label', { postProcess: 'titleCase' }),
+        value: TableColumn.LABEL,
+    },
+    {
         label: i18n.t('table.config.label.year', { postProcess: 'titleCase' }),
         value: TableColumn.YEAR,
     },
@@ -275,6 +279,25 @@ export const GENRE_TABLE_COLUMNS = [
     {
         label: i18n.t('table.config.label.title', { postProcess: 'titleCase' }),
         value: TableColumn.TITLE,
+    },
+    {
+        label: i18n.t('table.config.label.actions', { postProcess: 'titleCase' }),
+        value: TableColumn.ACTIONS,
+    },
+];
+
+export const LABEL_TABLE_COLUMNS = [
+    {
+        label: i18n.t('table.config.label.rowIndex', { postProcess: 'titleCase' }),
+        value: TableColumn.ROW_INDEX,
+    },
+    {
+        label: i18n.t('table.config.label.title', { postProcess: 'titleCase' }),
+        value: TableColumn.TITLE,
+    },
+    {
+        label: i18n.t('table.config.label.albumCount', { postProcess: 'titleCase' }),
+        value: TableColumn.ALBUM_COUNT,
     },
     {
         label: i18n.t('table.config.label.actions', { postProcess: 'titleCase' }),
