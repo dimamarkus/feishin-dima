@@ -89,6 +89,16 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
         navigate(`/library/time/${playlistId}`);
     };
 
+    // Handle center time click to navigate to current hour's playlist
+    const handleCenterTimeClick = () => {
+        const currentHour = currentTime.getHours();
+        const period = currentHour < 12 ? 'am' : 'pm';
+        const hour12 = currentHour % 12 || 12; // Convert 0 to 12 for 12 AM
+
+        const playlistId = currentHour.toString().padStart(2, '0');
+        navigate(`/library/time/${playlistId}`);
+    };
+
     return (
         <Paper
             radius="xl"
@@ -110,7 +120,7 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                     position: 'absolute',
                     top: 0,
                     width: '100%',
-                    zIndex: 7,
+                    zIndex: 5, // Lower z-index so interactive elements can be above it
                 }}
                 viewBox={`0 0 ${size} ${size}`}
             >
@@ -153,12 +163,22 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                 />
             </svg>
 
-            {/* Central time display - smaller and lower z-index */}
-            <div
+            {/* Central time display - make clickable */}
+            <UnstyledButton
+                onClick={handleCenterTimeClick}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.9)';
+                    e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)';
+                    e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)';
+                }}
                 style={{
                     background: 'rgba(0, 0, 0, 0.8)',
                     borderRadius: '16px',
                     color: 'white',
+                    cursor: 'pointer',
                     fontFamily: 'monospace',
                     fontSize: '14px',
                     fontWeight: 600,
@@ -167,8 +187,9 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                     position: 'absolute',
                     top: '50%',
                     transform: 'translate(-50%, -50%)',
+                    transition: 'all 0.2s ease',
                     whiteSpace: 'nowrap',
-                    zIndex: 8,
+                    zIndex: 20, // Higher z-index to ensure it's on top and clickable
                 }}
             >
                 {currentTime.toLocaleTimeString([], {
@@ -176,7 +197,7 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                     minute: '2-digit',
                     second: '2-digit',
                 })}
-            </div>
+            </UnstyledButton>
 
             {/* Clock center dot */}
             <div
@@ -189,7 +210,7 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                     top: '50%',
                     transform: 'translate(-50%, -50%)',
                     width: 16,
-                    zIndex: 9,
+                    zIndex: 6, // Above the hands but below interactive elements
                 }}
             />
 
@@ -205,10 +226,11 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                         height: 60,
                         justifyContent: 'center',
                         left: x - 30,
+                        pointerEvents: 'auto', // Ensure clickability
                         position: 'absolute',
                         top: y - 30,
                         width: 60,
-                        zIndex: 12,
+                        zIndex: 15, // High z-index to ensure buttons are clickable
                     }}
                 >
                     {/* Hour number */}
@@ -224,7 +246,10 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                     </Text>
 
                     {/* AM/PM buttons */}
-                    <Group spacing={4}>
+                    <Group
+                        spacing={4}
+                        style={{ pointerEvents: 'auto' }}
+                    >
                         {amPlaylist && (
                             <UnstyledButton
                                 onClick={() => handleHourClick('am', hour)}
@@ -248,6 +273,7 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                                     fontWeight: 600,
                                     padding: '2px 6px',
                                     transition: 'all 0.2s ease',
+                                    zIndex: 20,
                                 }}
                             >
                                 AM
@@ -276,6 +302,7 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                                     fontWeight: 600,
                                     padding: '2px 6px',
                                     transition: 'all 0.2s ease',
+                                    zIndex: 20,
                                 }}
                             >
                                 PM
@@ -310,6 +337,7 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                             transform: `rotate(${i * 30}deg)`,
                             transformOrigin: '0 0',
                             width: Math.abs(x2 - x1) || 2,
+                            zIndex: 4, // Lower than other elements
                         }}
                     />
                 );
