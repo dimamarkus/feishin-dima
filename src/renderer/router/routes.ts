@@ -24,6 +24,7 @@ export enum AppRoute {
     LIBRARY_SONGS = '/library/songs',
     LIBRARY_TIME = '/library/time',
     LIBRARY_TIME_DETAIL = '/library/time/:timeId',
+    LIBRARY_TIME_RANGE = '/library/time-range/:timeRangeId/:period',
     NOW_PLAYING = '/now-playing',
     PLAYING = '/playing',
     PLAYLISTS = '/playlists',

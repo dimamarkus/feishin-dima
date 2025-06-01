@@ -80,6 +80,12 @@ const TimeDetailRoute = lazy(() =>
     })),
 );
 
+const TimeRangePlaylistRoute = lazy(() =>
+    import('/@/renderer/features/time/components/time-range-playlist-route').then((module) => ({
+        default: module.TimeRangePlaylistRoute,
+    })),
+);
+
 const SettingsRoute = lazy(() => import('/@/renderer/features/settings/routes/settings-route'));
 
 const SearchRoute = lazy(() => import('/@/renderer/features/search/routes/search-route'));
@@ -181,6 +187,11 @@ export const AppRouter = () => {
                                         path={AppRoute.LIBRARY_TIME_DETAIL}
                                     />
                                 </Route>
+                                <Route
+                                    element={<TimeRangePlaylistRoute />}
+                                    errorElement={<RouteErrorBoundary />}
+                                    path={AppRoute.LIBRARY_TIME_RANGE}
+                                />
                                 <Route
                                     element={<AlbumListRoute />}
                                     errorElement={<RouteErrorBoundary />}
