@@ -7,7 +7,13 @@ import { Select, Switch, Text } from '/@/renderer/components';
 import { useGenreList } from '/@/renderer/features/genres';
 import { useSongList } from '/@/renderer/features/songs/queries/song-list-query';
 import { SongListFilter, useListFilterByKey, useListStoreActions } from '/@/renderer/store';
-import { GenreListSort, LibraryItem, SongListQuery, SortOrder } from '/@/shared/types/domain-types';
+import {
+    GenreListSort,
+    LibraryItem,
+    SongListQuery,
+    SongListSort,
+    SortOrder,
+} from '/@/shared/types/domain-types';
 
 interface SubsonicSongFiltersProps {
     customFilters?: Partial<SongListFilter>;
@@ -36,6 +42,8 @@ export const SubsonicSongFilters = ({
         query: {
             ...customFilters,
             limit: 500, // Sample size to extract genres from
+            sortBy: SongListSort.NAME,
+            sortOrder: SortOrder.ASC,
             startIndex: 0,
         },
         serverId,

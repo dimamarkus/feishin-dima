@@ -9,7 +9,13 @@ import { useGenreList } from '/@/renderer/features/genres';
 import { useSongList } from '/@/renderer/features/songs/queries/song-list-query';
 import { useTagList } from '/@/renderer/features/tag/queries/use-tag-list';
 import { SongListFilter, useListFilterByKey, useListStoreActions } from '/@/renderer/store';
-import { GenreListSort, LibraryItem, SongListQuery, SortOrder } from '/@/shared/types/domain-types';
+import {
+    GenreListSort,
+    LibraryItem,
+    SongListQuery,
+    SongListSort,
+    SortOrder,
+} from '/@/shared/types/domain-types';
 
 interface JellyfinSongFiltersProps {
     customFilters?: Partial<SongListFilter>;
@@ -38,6 +44,8 @@ export const JellyfinSongFilters = ({
         query: {
             ...customFilters,
             limit: 500, // Sample size to extract genres from
+            sortBy: SongListSort.NAME, // Required field
+            sortOrder: SortOrder.ASC, // Required field
             startIndex: 0,
         },
         serverId,
@@ -66,8 +74,8 @@ export const JellyfinSongFilters = ({
         if (!contextualSongsQuery.data?.items?.length) return { max: undefined, min: undefined };
 
         const years = contextualSongsQuery.data.items
-            .filter((song) => song.year)
-            .map((song) => song.year)
+            .filter((song) => song.releaseYear)
+            .map((song) => Number(song.releaseYear))
             .sort((a, b) => a - b);
 
         return {
