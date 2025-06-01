@@ -68,6 +68,18 @@ const LabelDetailRoute = lazy(
     () => import('/@/renderer/features/labels/routes/label-detail-route'),
 );
 
+const TimeListRoute = lazy(() =>
+    import('/@/renderer/features/time/components/time-overview-route').then((module) => ({
+        default: module.TimeOverviewRoute,
+    })),
+);
+
+const TimeDetailRoute = lazy(() =>
+    import('/@/renderer/features/time/components/time-playlist-route').then((module) => ({
+        default: module.TimePlaylistRoute,
+    })),
+);
+
 const SettingsRoute = lazy(() => import('/@/renderer/features/settings/routes/settings-route'));
 
 const SearchRoute = lazy(() => import('/@/renderer/features/search/routes/search-route'));
@@ -155,6 +167,18 @@ export const AppRouter = () => {
                                         element={<LabelDetailRoute />}
                                         errorElement={<RouteErrorBoundary />}
                                         path={AppRoute.LIBRARY_LABELS_DETAIL}
+                                    />
+                                </Route>
+                                <Route path={AppRoute.LIBRARY_TIME}>
+                                    <Route
+                                        element={<TimeListRoute />}
+                                        errorElement={<RouteErrorBoundary />}
+                                        index
+                                    />
+                                    <Route
+                                        element={<TimeDetailRoute />}
+                                        errorElement={<RouteErrorBoundary />}
+                                        path={AppRoute.LIBRARY_TIME_DETAIL}
                                     />
                                 </Route>
                                 <Route

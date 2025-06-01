@@ -86,6 +86,12 @@ export const sidebarItems: SidebarItemType[] = [
         route: AppRoute.LIBRARY_LABELS,
     },
     {
+        disabled: false,
+        id: 'Time',
+        label: i18n.t('page.sidebar.time'),
+        route: AppRoute.LIBRARY_TIME,
+    },
+    {
         disabled: true,
         id: 'Playlists',
         label: i18n.t('page.sidebar.playlists'),
@@ -775,10 +781,52 @@ export const useSettingsStore = create<SettingsSlice>()(
                     }
                 }
 
+                if (version === 10) {
+                    const state = persistedState as SettingsSlice;
+                    // Add Time to existing sidebar configurations if it doesn't exist
+                    const hasTime = state.general.sidebarItems.some((item) => item.id === 'Time');
+                    if (!hasTime) {
+                        // Find the position after Labels
+                        const labelsIndex = state.general.sidebarItems.findIndex(
+                            (item) => item.id === 'Labels',
+                        );
+                        const insertIndex =
+                            labelsIndex >= 0 ? labelsIndex + 1 : state.general.sidebarItems.length;
+
+                        state.general.sidebarItems.splice(insertIndex, 0, {
+                            disabled: false,
+                            id: 'Time',
+                            label: i18n.t('page.sidebar.time'),
+                            route: AppRoute.LIBRARY_TIME,
+                        });
+                    }
+                }
+
+                if (version <= 10) {
+                    const state = persistedState as SettingsSlice;
+                    // Ensure Time is added to sidebar configurations for any version <= 10
+                    const hasTime = state.general.sidebarItems.some((item) => item.id === 'Time');
+                    if (!hasTime) {
+                        // Find the position after Labels
+                        const labelsIndex = state.general.sidebarItems.findIndex(
+                            (item) => item.id === 'Labels',
+                        );
+                        const insertIndex =
+                            labelsIndex >= 0 ? labelsIndex + 1 : state.general.sidebarItems.length;
+
+                        state.general.sidebarItems.splice(insertIndex, 0, {
+                            disabled: false,
+                            id: 'Time',
+                            label: i18n.t('page.sidebar.time'),
+                            route: AppRoute.LIBRARY_TIME,
+                        });
+                    }
+                }
+
                 return persistedState;
             },
             name: 'store_settings',
-            version: 10,
+            version: 11,
         },
     ),
 );

@@ -22,6 +22,8 @@ export enum AppRoute {
     LIBRARY_LABELS = '/library/labels',
     LIBRARY_LABELS_DETAIL = '/library/labels/:labelId',
     LIBRARY_SONGS = '/library/songs',
+    LIBRARY_TIME = '/library/time',
+    LIBRARY_TIME_DETAIL = '/library/time/:timeId',
     NOW_PLAYING = '/now-playing',
     PLAYING = '/playing',
     PLAYLISTS = '/playlists',

@@ -19,6 +19,8 @@ import {
     RiSearchLine,
     RiSettings2Fill,
     RiSettings2Line,
+    RiTimeFill,
+    RiTimeLine,
     RiUserVoiceFill,
     RiUserVoiceLine,
 } from 'react-icons/ri';
@@ -59,6 +61,9 @@ export const SidebarIcon = ({ active, route, size }: SidebarIconProps) => {
         case AppRoute.LIBRARY_SONGS:
             if (active) return <RiMusic2Fill size={size} />;
             return <RiMusic2Line size={size} />;
+        case AppRoute.LIBRARY_TIME:
+            if (active) return <RiTimeFill size={size} />;
+            return <RiTimeLine size={size} />;
         case AppRoute.NOW_PLAYING:
             if (active) return <RiPlayFill size={size} />;
             return <RiPlayLine size={size} />;

@@ -433,12 +433,25 @@
             "search": "$t(common.search)",
             "settings": "$t(common.setting_other)",
             "shared": "shared $t(entity.playlist_other)",
+            "time": "Time",
             "tracks": "$t(entity.track_other)"
         },
         "trackList": {
             "artistTracks": "tracks by {{artist}}",
             "genreTracks": "\"{{genre}}\" $t(entity.track_other)",
             "title": "$t(entity.track_other)"
+        },
+        "timeList": {
+            "title": "Browse by Time",
+            "description": "Organize your music by time of day",
+            "hourStats": "{{hours}} hours • {{songs}} songs with time data",
+            "noTimeData": "No songs found with time information",
+            "timeFormat": "Supports formats like: 3AM, 11PM, 15:00, 3:00 PM"
+        },
+        "timeListContent": {
+            "error": "Failed to load time data: {{error}}",
+            "loading": "Loading time data...",
+            "noHours": "No time data found"
         }
     },
     "player": {
