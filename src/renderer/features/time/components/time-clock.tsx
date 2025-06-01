@@ -99,6 +99,23 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
         navigate(`/library/time/${playlistId}`);
     };
 
+    // Common button style for AM/PM buttons
+    const buttonBaseStyle = {
+        alignItems: 'center',
+        borderRadius: 4,
+        cursor: 'pointer',
+        display: 'flex',
+        fontSize: '10px',
+        fontWeight: 600,
+        height: '20px',
+        justifyContent: 'center',
+        minWidth: '28px',
+        opacity: 0.6,
+        padding: '0 6px',
+        transition: 'all 0.2s ease',
+        zIndex: 20,
+    };
+
     return (
         <Paper
             radius="xl"
@@ -202,7 +219,7 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
             {/* Clock center dot */}
             <div
                 style={{
-                    background: 'var(--mantine-color-blue-6)',
+                    background: 'var(--primary-color)',
                     borderRadius: '50%',
                     height: 16,
                     left: '50%',
@@ -237,7 +254,7 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                     <Text
                         size="lg"
                         style={{
-                            color: 'var(--mantine-color-gray-8)',
+                            color: 'var(--main-fg)',
                             textAlign: 'center',
                         }}
                         weight={700}
@@ -246,34 +263,31 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                     </Text>
 
                     {/* AM/PM buttons */}
-                    <Group
-                        spacing={4}
-                        style={{ pointerEvents: 'auto' }}
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            gap: 4,
+                            justifyContent: 'center',
+                            width: '100%',
+                        }}
                     >
                         {amPlaylist && (
                             <UnstyledButton
                                 onClick={() => handleHourClick('am', hour)}
                                 onMouseEnter={(e) => {
-                                    e.currentTarget.style.background =
-                                        'var(--mantine-color-blue-2)';
+                                    e.currentTarget.style.opacity = '1';
                                     e.currentTarget.style.transform = 'scale(1.1)';
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.currentTarget.style.background =
-                                        'var(--mantine-color-blue-1)';
+                                    e.currentTarget.style.opacity = '0.6';
                                     e.currentTarget.style.transform = 'scale(1)';
                                 }}
                                 style={{
-                                    background: 'var(--mantine-color-blue-1)',
-                                    border: '1px solid var(--mantine-color-blue-3)',
-                                    borderRadius: 4,
-                                    color: 'var(--mantine-color-blue-7)',
-                                    cursor: 'pointer',
-                                    fontSize: '10px',
-                                    fontWeight: 600,
-                                    padding: '2px 6px',
-                                    transition: 'all 0.2s ease',
-                                    zIndex: 20,
+                                    ...buttonBaseStyle,
+                                    background: 'rgba(53, 116, 252, 0.05)',
+                                    border: '1px solid rgba(53, 116, 252, 0.5)',
+                                    color: 'var(--primary-color)',
                                 }}
                             >
                                 AM
@@ -283,32 +297,24 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                             <UnstyledButton
                                 onClick={() => handleHourClick('pm', hour)}
                                 onMouseEnter={(e) => {
-                                    e.currentTarget.style.background =
-                                        'var(--mantine-color-orange-2)';
+                                    e.currentTarget.style.opacity = '1';
                                     e.currentTarget.style.transform = 'scale(1.1)';
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.currentTarget.style.background =
-                                        'var(--mantine-color-orange-1)';
+                                    e.currentTarget.style.opacity = '0.6';
                                     e.currentTarget.style.transform = 'scale(1)';
                                 }}
                                 style={{
-                                    background: 'var(--mantine-color-orange-1)',
-                                    border: '1px solid var(--mantine-color-orange-3)',
-                                    borderRadius: 4,
-                                    color: 'var(--mantine-color-orange-7)',
-                                    cursor: 'pointer',
-                                    fontSize: '10px',
-                                    fontWeight: 600,
-                                    padding: '2px 6px',
-                                    transition: 'all 0.2s ease',
-                                    zIndex: 20,
+                                    ...buttonBaseStyle,
+                                    background: 'rgba(255, 120, 120, 0.05)',
+                                    border: '1px solid rgba(255, 120, 120, 0.5)',
+                                    color: 'var(--secondary-color)',
                                 }}
                             >
                                 PM
                             </UnstyledButton>
                         )}
-                    </Group>
+                    </div>
                 </div>
             ))}
 
