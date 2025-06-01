@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Select, Switch, Text } from '/@/renderer/components';
 import { useGenreList } from '/@/renderer/features/genres';
+import { useSongList } from '/@/renderer/features/songs/queries/song-list-query';
 import { SongListFilter, useListFilterByKey, useListStoreActions } from '/@/renderer/store';
 import { GenreListSort, LibraryItem, SongListQuery, SortOrder } from '/@/shared/types/domain-types';
 
@@ -27,7 +28,41 @@ export const SubsonicSongFilters = ({
 
     const isGenrePage = customFilters?.genreIds !== undefined;
 
+    // Get a sample of songs from the current context to extract available genres
+    const contextualSongsQuery = useSongList({
+        options: {
+            enabled: !!customFilters, // Only fetch if we have custom filters (i.e., in a time playlist)
+        },
+        query: {
+            ...customFilters,
+            limit: 500, // Sample size to extract genres from
+            startIndex: 0,
+        },
+        serverId,
+    });
+
+    // Extract unique genres from the contextual songs
+    const contextualGenreList = useMemo(() => {
+        if (!contextualSongsQuery.data?.items?.length) return [];
+
+        const uniqueGenres = new Map<string, { label: string; value: string }>();
+
+        contextualSongsQuery.data.items.forEach((song) => {
+            song.genres?.forEach((genre) => {
+                uniqueGenres.set(genre.id, {
+                    label: genre.name,
+                    value: genre.id,
+                });
+            });
+        });
+
+        return Array.from(uniqueGenres.values()).sort((a, b) => a.label.localeCompare(b.label));
+    }, [contextualSongsQuery.data]);
+
     const genreListQuery = useGenreList({
+        options: {
+            enabled: !customFilters, // Only fetch full list if no custom filters
+        },
         query: {
             sortBy: GenreListSort.NAME,
             sortOrder: SortOrder.ASC,
@@ -36,13 +71,16 @@ export const SubsonicSongFilters = ({
         serverId,
     });
 
-    const genreList = useMemo(() => {
+    const fullGenreList = useMemo(() => {
         if (!genreListQuery?.data) return [];
         return genreListQuery.data.items.map((genre) => ({
             label: genre.name,
             value: genre.id,
         }));
     }, [genreListQuery.data]);
+
+    // Use contextual genres if available, otherwise fall back to full list
+    const genreList = customFilters ? contextualGenreList : fullGenreList;
 
     const handleGenresFilter = debounce((e: null | string) => {
         const updatedFilters = setFilter({

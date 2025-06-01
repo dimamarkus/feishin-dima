@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { NumberInput, Switch, Text } from '/@/renderer/components';
 import { SelectWithInvalidData } from '/@/renderer/components/select-with-invalid-data';
 import { useGenreList } from '/@/renderer/features/genres';
+import { useSongList } from '/@/renderer/features/songs/queries/song-list-query';
 import { useTagList } from '/@/renderer/features/tag/queries/use-tag-list';
 import { SongListFilter, useListFilterByKey, useListStoreActions } from '/@/renderer/store';
 import { GenreListSort, LibraryItem, SongListQuery, SortOrder } from '/@/shared/types/domain-types';
@@ -29,6 +30,38 @@ export const NavidromeSongFilters = ({
 
     const isGenrePage = customFilters?.genreIds !== undefined;
 
+    // Get a sample of songs from the current context to extract available genres
+    const contextualSongsQuery = useSongList({
+        query: {
+            ...customFilters,
+            limit: 500, // Sample size to extract genres from
+            startIndex: 0,
+        },
+        serverId,
+        options: {
+            enabled: !!customFilters, // Only fetch if we have custom filters (i.e., in a time playlist)
+        },
+    });
+
+    // Extract unique genres from the contextual songs
+    const contextualGenreList = useMemo(() => {
+        if (!contextualSongsQuery.data?.items?.length) return [];
+
+        const uniqueGenres = new Map<string, { label: string; value: string }>();
+
+        contextualSongsQuery.data.items.forEach((song) => {
+            song.genres?.forEach((genre) => {
+                uniqueGenres.set(genre.id, {
+                    label: genre.name,
+                    value: genre.id,
+                });
+            });
+        });
+
+        return Array.from(uniqueGenres.values()).sort((a, b) => a.label.localeCompare(b.label));
+    }, [contextualSongsQuery.data]);
+
+    // Fall back to full genre list if we don't have custom filters
     const genreListQuery = useGenreList({
         query: {
             sortBy: GenreListSort.NAME,
@@ -36,7 +69,21 @@ export const NavidromeSongFilters = ({
             startIndex: 0,
         },
         serverId,
+        options: {
+            enabled: !customFilters, // Only fetch full list if no custom filters
+        },
     });
+
+    const fullGenreList = useMemo(() => {
+        if (!genreListQuery?.data) return [];
+        return genreListQuery.data.items.map((genre) => ({
+            label: genre.name,
+            value: genre.id,
+        }));
+    }, [genreListQuery.data]);
+
+    // Use contextual genres if available, otherwise fall back to full list
+    const genreList = customFilters ? contextualGenreList : fullGenreList;
 
     const tagsQuery = useTagList({
         query: {
@@ -44,14 +91,6 @@ export const NavidromeSongFilters = ({
         },
         serverId,
     });
-
-    const genreList = useMemo(() => {
-        if (!genreListQuery?.data) return [];
-        return genreListQuery.data.items.map((genre) => ({
-            label: genre.name,
-            value: genre.id,
-        }));
-    }, [genreListQuery.data]);
 
     const handleGenresFilter = debounce((e: null | string) => {
         const updatedFilters = setFilter({

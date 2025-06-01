@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { NumberInput, Switch, Text } from '/@/renderer/components';
 import { MultiSelectWithInvalidData } from '/@/renderer/components/select-with-invalid-data';
 import { useGenreList } from '/@/renderer/features/genres';
+import { useSongList } from '/@/renderer/features/songs/queries/song-list-query';
 import { useTagList } from '/@/renderer/features/tag/queries/use-tag-list';
 import { SongListFilter, useListFilterByKey, useListStoreActions } from '/@/renderer/store';
 import { GenreListSort, LibraryItem, SongListQuery, SortOrder } from '/@/shared/types/domain-types';
@@ -29,9 +30,58 @@ export const JellyfinSongFilters = ({
 
     const isGenrePage = customFilters?.genreIds !== undefined;
 
+    // Get a sample of songs from the current context to extract available genres
+    const contextualSongsQuery = useSongList({
+        options: {
+            enabled: !!customFilters, // Only fetch if we have custom filters (i.e., in a time playlist)
+        },
+        query: {
+            ...customFilters,
+            limit: 500, // Sample size to extract genres from
+            startIndex: 0,
+        },
+        serverId,
+    });
+
+    // Extract unique genres from the contextual songs
+    const contextualGenreList = useMemo(() => {
+        if (!contextualSongsQuery.data?.items?.length) return [];
+
+        const uniqueGenres = new Map<string, { label: string; value: string }>();
+
+        contextualSongsQuery.data.items.forEach((song) => {
+            song.genres?.forEach((genre) => {
+                uniqueGenres.set(genre.id, {
+                    label: genre.name,
+                    value: genre.id,
+                });
+            });
+        });
+
+        return Array.from(uniqueGenres.values()).sort((a, b) => a.label.localeCompare(b.label));
+    }, [contextualSongsQuery.data]);
+
+    // Extract year range from contextual songs
+    const contextualYearRange = useMemo(() => {
+        if (!contextualSongsQuery.data?.items?.length) return { max: undefined, min: undefined };
+
+        const years = contextualSongsQuery.data.items
+            .filter((song) => song.year)
+            .map((song) => song.year)
+            .sort((a, b) => a - b);
+
+        return {
+            max: years.length > 0 ? years[years.length - 1] : undefined,
+            min: years.length > 0 ? years[0] : undefined,
+        };
+    }, [contextualSongsQuery.data]);
+
     // Despite the fact that getTags returns genres, it only returns genre names.
     // We prefer using IDs, hence the double query
     const genreListQuery = useGenreList({
+        options: {
+            enabled: !customFilters, // Only fetch full list if no custom filters
+        },
         query: {
             musicFolderId: filter?.musicFolderId,
             sortBy: GenreListSort.NAME,
@@ -41,13 +91,16 @@ export const JellyfinSongFilters = ({
         serverId,
     });
 
-    const genreList = useMemo(() => {
+    const fullGenreList = useMemo(() => {
         if (!genreListQuery?.data) return [];
         return genreListQuery.data.items.map((genre) => ({
             label: genre.name,
             value: genre.id,
         }));
     }, [genreListQuery.data]);
+
+    // Use contextual genres if available, otherwise fall back to full list
+    const genreList = customFilters ? contextualGenreList : fullGenreList;
 
     const tagsQuery = useTagList({
         query: {
@@ -187,17 +240,27 @@ export const JellyfinSongFilters = ({
                 <NumberInput
                     defaultValue={filter?.minYear}
                     label={t('filter.fromYear', { postProcess: 'sentenceCase' })}
-                    max={2300}
-                    min={1700}
+                    max={customFilters ? contextualYearRange.max || 2300 : 2300}
+                    min={customFilters ? contextualYearRange.min || 1700 : 1700}
                     onChange={handleMinYearFilter}
+                    placeholder={
+                        customFilters && contextualYearRange.min
+                            ? `${contextualYearRange.min}`
+                            : undefined
+                    }
                     required={!!filter?.minYear}
                 />
                 <NumberInput
                     defaultValue={filter?.maxYear}
                     label={t('filter.toYear', { postProcess: 'sentenceCase' })}
-                    max={2300}
-                    min={1700}
+                    max={customFilters ? contextualYearRange.max || 2300 : 2300}
+                    min={customFilters ? contextualYearRange.min || 1700 : 1700}
                     onChange={handleMaxYearFilter}
+                    placeholder={
+                        customFilters && contextualYearRange.max
+                            ? `${contextualYearRange.max}`
+                            : undefined
+                    }
                     required={!!filter?.minYear}
                 />
             </Group>
