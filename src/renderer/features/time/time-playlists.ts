@@ -2,7 +2,7 @@ export interface TimePlaylist {
     displayName: string;
     icon: string;
     id: string;
-    lyricistValue: string;
+    lyricistValue: string | string[];
     route: string;
     type: 'hour' | 'period';
 }
@@ -13,7 +13,7 @@ export const TIME_PERIODS: TimePlaylist[] = [
         displayName: 'Early Morning (5 AM - 8 AM)',
         icon: '🌅',
         id: 'time-early-morning',
-        lyricistValue: '5am',
+        lyricistValue: ['5am', '6am', '7am', '8am'],
         route: '/library/time/early-morning',
         type: 'period',
     },
@@ -21,7 +21,7 @@ export const TIME_PERIODS: TimePlaylist[] = [
         displayName: 'Morning (9 AM - 11 AM)',
         icon: '☀️',
         id: 'time-morning',
-        lyricistValue: '9am',
+        lyricistValue: ['9am', '10am', '11am'],
         route: '/library/time/morning',
         type: 'period',
     },
@@ -29,7 +29,7 @@ export const TIME_PERIODS: TimePlaylist[] = [
         displayName: 'Midday (12 PM - 2 PM)',
         icon: '🌞',
         id: 'time-midday',
-        lyricistValue: '12pm',
+        lyricistValue: ['12pm', '1pm', '2pm'],
         route: '/library/time/midday',
         type: 'period',
     },
@@ -37,7 +37,7 @@ export const TIME_PERIODS: TimePlaylist[] = [
         displayName: 'Afternoon (3 PM - 5 PM)',
         icon: '🌤️',
         id: 'time-afternoon',
-        lyricistValue: '3pm',
+        lyricistValue: ['3pm', '4pm', '5pm'],
         route: '/library/time/afternoon',
         type: 'period',
     },
@@ -45,7 +45,7 @@ export const TIME_PERIODS: TimePlaylist[] = [
         displayName: 'Evening (6 PM - 8 PM)',
         icon: '🌆',
         id: 'time-evening',
-        lyricistValue: '6pm',
+        lyricistValue: ['6pm', '7pm', '8pm'],
         route: '/library/time/evening',
         type: 'period',
     },
@@ -53,7 +53,7 @@ export const TIME_PERIODS: TimePlaylist[] = [
         displayName: 'Night (9 PM - 11 PM)',
         icon: '🌙',
         id: 'time-night',
-        lyricistValue: '9pm',
+        lyricistValue: ['9pm', '10pm', '11pm'],
         route: '/library/time/night',
         type: 'period',
     },
@@ -61,7 +61,7 @@ export const TIME_PERIODS: TimePlaylist[] = [
         displayName: 'Late Night (12 AM - 4 AM)',
         icon: '🌌',
         id: 'time-late-night',
-        lyricistValue: '12am',
+        lyricistValue: ['12am', '1am', '2am', '3am', '4am'],
         route: '/library/time/late-night',
         type: 'period',
     },

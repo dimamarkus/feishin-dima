@@ -37,9 +37,21 @@ export const TimePlaylistRoute = () => {
 
     // Use the same pattern as song list route with custom filters
     const customFilters = useMemo(() => {
-        return {
-            searchTerm: timePlaylist?.lyricistValue || '',
-        };
+        if (!timePlaylist?.lyricistValue) return undefined;
+
+        if (Array.isArray(timePlaylist.lyricistValue)) {
+            // For time periods with multiple values, use the first value
+            const searchTerm = timePlaylist.lyricistValue[0];
+
+            return {
+                searchTerm,
+            };
+        } else {
+            // For individual hours, use the single value
+            return {
+                searchTerm: timePlaylist.lyricistValue,
+            };
+        }
     }, [timePlaylist?.lyricistValue]);
 
     // Use useListFilterByKey with the existing 'song' key
