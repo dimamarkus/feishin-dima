@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { TIME_HOURS, TIME_PERIODS } from '../time-playlists';
+import { TimeClock } from './time-clock';
 
 import { PageHeader } from '/@/renderer/components/page-header';
 import { Text } from '/@/renderer/components/text';
@@ -114,6 +115,17 @@ const CardCount = styled(Text)`
     opacity: 0.7;
 `;
 
+const ClockSection = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 32px;
+    padding: 24px;
+    background: var(--generic-bg);
+    border-radius: 12px;
+    border: 1px solid var(--generic-border);
+`;
+
 interface TimeCardDisplayProps {
     onCardClick: (timeId: string) => void;
     timePlaylist: any; // Using 'any' for now as TimePlaylist type is in time-playlists.ts
@@ -186,6 +198,20 @@ export const TimeOverviewRoute = () => {
                 </HelpText>
 
                 <GridContainer>
+                    <ClockSection>
+                        <SectionTitle>Interactive Clock</SectionTitle>
+                        <Text
+                            style={{
+                                marginBottom: '20px',
+                                opacity: 0.8,
+                                textAlign: 'center',
+                            }}
+                        >
+                            Click on any hour to explore music for that time
+                        </Text>
+                        <TimeClock size={360} />
+                    </ClockSection>
+
                     <Section>
                         <SectionTitle>Time Periods</SectionTitle>
                         <Grid>
