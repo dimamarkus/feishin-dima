@@ -1,5 +1,5 @@
 import { Group, Paper, Text, UnstyledButton } from '@mantine/core';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { TIME_HOURS } from '../time-playlists';
@@ -19,6 +19,9 @@ interface TimeClockProps {
 export const TimeClock = ({ size = 300 }: TimeClockProps) => {
     const navigate = useNavigate();
     const [currentTime, setCurrentTime] = useState(new Date());
+    const [hoveredHour, setHoveredHour] = useState<null | number>(null);
+    const [isHovering, setIsHovering] = useState(false);
+    const centerTimeRef = useRef<HTMLButtonElement>(null);
 
     // Update current time every second
     useEffect(() => {
@@ -99,6 +102,88 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
         navigate(`/library/time/${playlistId}`);
     };
 
+    // Calculate which hour is being hovered based on mouse position
+    const calculateHoveredHour = (event: React.MouseEvent<HTMLDivElement>) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const mouseX = event.clientX - rect.left - centerX;
+        const mouseY = event.clientY - rect.top - centerY;
+
+        // Calculate angle from center to mouse position
+        let angle = Math.atan2(mouseY, mouseX) * (180 / Math.PI);
+        // Adjust angle so 12 o'clock is 0 degrees
+        angle = (angle + 90) % 360;
+        if (angle < 0) angle += 360;
+
+        // Convert angle to hour (1-12)
+        const hourFloat = angle / 30;
+        const hour = Math.round(hourFloat) % 12;
+        return hour === 0 ? 12 : hour;
+    };
+
+    // Handle mouse move over clock
+    const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+        if (centerTimeRef.current) {
+            const centerRect = centerTimeRef.current.getBoundingClientRect();
+            const isOverCenter =
+                event.clientX >= centerRect.left &&
+                event.clientX <= centerRect.right &&
+                event.clientY >= centerRect.top &&
+                event.clientY <= centerRect.bottom;
+
+            if (isOverCenter) {
+                setHoveredHour(null);
+                setIsHovering(false);
+                return; // Don't proceed to calculate arc hover if over center
+            }
+        }
+
+        const calculatedHour = calculateHoveredHour(event);
+        setHoveredHour(calculatedHour);
+        setIsHovering(true);
+    };
+
+    // Handle mouse leave
+    const handleMouseLeave = () => {
+        setHoveredHour(null);
+        setIsHovering(false);
+    };
+
+    // Generate arc path for SVG - creates 2-hour spans
+    const createArcPath = (startHour: number, endHour: number, radius: number) => {
+        const centerX = size / 2;
+        const centerY = size / 2;
+
+        // Convert hours to angles (12 o'clock = -90 degrees)
+        const startAngle = (startHour - 3) * 30 * (Math.PI / 180);
+        const endAngle = (endHour - 3) * 30 * (Math.PI / 180);
+
+        const startX = centerX + radius * Math.cos(startAngle);
+        const startY = centerY + radius * Math.sin(startAngle);
+        const endX = centerX + radius * Math.cos(endAngle);
+        const endY = centerY + radius * Math.sin(endAngle);
+
+        // Arcs are always 60 degrees (2 hours), so large-arc-flag is always 0
+        const largeArcFlag = 0;
+
+        return `M ${startX} ${startY} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endX} ${endY}`;
+    };
+
+    // Helper function to normalize hour (handle 12-hour wraparound)
+    const normalizeHour = (hour: number) => {
+        if (hour <= 0) return hour + 12;
+        if (hour > 12) return hour - 12;
+        return hour;
+    };
+
+    // Handle arc click for time range navigation
+    const handleArcClick = (startHour: number, endHour: number, period: 'am' | 'pm') => {
+        // This will eventually navigate to a view showing the 3-hour range
+        console.log(`Navigate to ${period} range: ${startHour}-${endHour}`);
+        // TODO: Implement navigation to 3-hour view
+    };
+
     // Common button style for AM/PM buttons
     const buttonBaseStyle = {
         alignItems: 'center',
@@ -118,6 +203,8 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
 
     return (
         <Paper
+            onMouseLeave={handleMouseLeave}
+            onMouseMove={handleMouseMove}
             radius="xl"
             shadow="md"
             style={{
@@ -129,11 +216,72 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                 width: size,
             }}
         >
+            {/* SVG for hover arcs - behind everything */}
+            <svg
+                style={{
+                    height: '100%',
+                    left: 0,
+                    position: 'absolute',
+                    top: 0,
+                    width: '100%',
+                    zIndex: 7, // Raised z-index to be above clock hands but below hour markers
+                }}
+                viewBox={`0 0 ${size} ${size}`}
+            >
+                {/* Hover arcs */}
+                {isHovering && hoveredHour !== null && (
+                    <>
+                        {/* Blue arc: Inner arc */}
+                        <path
+                            d={createArcPath(
+                                normalizeHour(hoveredHour - 1),
+                                normalizeHour(hoveredHour + 1),
+                                (size - 85) / 2,
+                            )}
+                            fill="none"
+                            onClick={() =>
+                                handleArcClick(
+                                    normalizeHour(hoveredHour - 1),
+                                    normalizeHour(hoveredHour + 1),
+                                    'am',
+                                )
+                            }
+                            opacity="0.6"
+                            stroke="var(--primary-color)"
+                            strokeWidth="32"
+                            style={{ cursor: 'pointer' }}
+                        />
+
+                        {/* Red arc: Outer arc */}
+                        <path
+                            d={createArcPath(
+                                normalizeHour(hoveredHour - 1),
+                                normalizeHour(hoveredHour + 1),
+                                (size - 25) / 2,
+                            )}
+                            fill="none"
+                            onClick={() =>
+                                handleArcClick(
+                                    normalizeHour(hoveredHour - 1),
+                                    normalizeHour(hoveredHour + 1),
+                                    'pm',
+                                )
+                            }
+                            opacity="0.6"
+                            stroke="var(--secondary-color)"
+                            strokeWidth="32"
+                            style={{ cursor: 'pointer' }}
+                        />
+                    </>
+                )}
+            </svg>
+
             {/* SVG for clock hands */}
             <svg
                 style={{
                     height: '100%',
                     left: 0,
+                    pointerEvents: 'none', // Added to prevent hands from intercepting clicks
                     position: 'absolute',
                     top: 0,
                     width: '100%',
@@ -191,6 +339,7 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                     e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)';
                     e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)';
                 }}
+                ref={centerTimeRef}
                 style={{
                     background: 'rgba(0, 0, 0, 0.8)',
                     borderRadius: '16px',
@@ -227,7 +376,7 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                     top: '50%',
                     transform: 'translate(-50%, -50%)',
                     width: 16,
-                    zIndex: 6, // Above the hands but below interactive elements
+                    zIndex: 8, // Raised to be above arcs, below hour markers
                 }}
             />
 
@@ -243,7 +392,7 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                         height: 60,
                         justifyContent: 'center',
                         left: x - 30,
-                        pointerEvents: 'auto', // Ensure clickability
+                        pointerEvents: 'none', // Allow clicks to pass through to arcs
                         position: 'absolute',
                         top: y - 30,
                         width: 60,
@@ -254,7 +403,11 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                     <Text
                         size="lg"
                         style={{
+                            background: 'rgba(0, 0, 0, 0.7)', // Added background
+                            borderRadius: '4px', // Added border radius
                             color: 'var(--main-fg)',
+                            padding: '2px 6px', // Added padding
+                            pointerEvents: 'auto', // Make text itself non-blocking if not interactive
                             textAlign: 'center',
                         }}
                         weight={700}
@@ -269,6 +422,7 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                             flexDirection: 'row',
                             gap: 4,
                             justifyContent: 'center',
+                            pointerEvents: 'auto', // Make button container specifically clickable
                             width: '100%',
                         }}
                     >
@@ -285,9 +439,10 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                                 }}
                                 style={{
                                     ...buttonBaseStyle,
-                                    background: 'rgba(53, 116, 252, 0.05)',
+                                    background: 'rgba(0, 0, 0, 0.7)', // Added background
                                     border: '1px solid rgba(53, 116, 252, 0.5)',
                                     color: 'var(--primary-color)',
+                                    pointerEvents: 'auto', // Ensure buttons are clickable
                                 }}
                             >
                                 AM
@@ -306,9 +461,10 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
                                 }}
                                 style={{
                                     ...buttonBaseStyle,
-                                    background: 'rgba(255, 120, 120, 0.05)',
+                                    background: 'rgba(0, 0, 0, 0.7)', // Added background
                                     border: '1px solid rgba(255, 120, 120, 0.5)',
                                     color: 'var(--secondary-color)',
+                                    pointerEvents: 'auto', // Ensure buttons are clickable
                                 }}
                             >
                                 PM
