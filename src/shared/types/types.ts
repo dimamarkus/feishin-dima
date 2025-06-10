@@ -40,6 +40,7 @@ export type CardRoute = {
 export type CardRow<T> = {
     arrayProperty?: string;
     format?: (value: T) => ReactNode;
+    formatLink?: (value: T) => string | undefined;
     property: keyof T;
     route?: CardRoute;
 };

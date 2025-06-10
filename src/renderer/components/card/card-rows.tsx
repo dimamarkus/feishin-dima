@@ -146,6 +146,20 @@ export const CardRows = ({ data, rows }: CardRowsProps) => {
                             >
                                 {displayValue}
                             </Text>
+                        ) : row.formatLink ? (
+                            <Text
+                                $link
+                                $noSelect
+                                component="a"
+                                href={row.formatLink(data)}
+                                onClick={(e) => e.stopPropagation()}
+                                overflow="hidden"
+                                rel="noopener noreferrer"
+                                size={index > 0 ? 'sm' : 'md'}
+                                target="_blank"
+                            >
+                                {displayValue}
+                            </Text>
                         ) : (
                             <Text
                                 $noSelect
@@ -193,6 +207,21 @@ export const ALBUM_CARD_ROWS: { [key: string]: CardRow<Album> } = {
                 return '—';
             }
             return String(album.catalogNumber).trim();
+        },
+        formatLink: (album) => {
+            // Only create link if catalogNumber exists and is not the placeholder
+            if (
+                !album.catalogNumber ||
+                (typeof album.catalogNumber === 'string' && !album.catalogNumber.trim())
+            ) {
+                return undefined;
+            }
+
+            const catalogNumber = String(album.catalogNumber).trim();
+            const albumLabel = LabelAggregationService.getAlbumLabel(album);
+            const searchQuery = albumLabel ? `${albumLabel} ${catalogNumber}` : catalogNumber;
+
+            return `https://www.discogs.com/search?q=${encodeURIComponent(searchQuery)}&type=release`;
         },
         property: 'catalogNumber',
     },
