@@ -434,7 +434,8 @@
             "settings": "$t(common.setting_other)",
             "shared": "shared $t(entity.playlist_other)",
             "time": "Time",
-            "tracks": "$t(entity.track_other)"
+            "tracks": "$t(entity.track_other)",
+            "years": "Years"
         },
         "trackList": {
             "artistTracks": "tracks by {{artist}}",
@@ -452,6 +453,13 @@
             "error": "Failed to load time data: {{error}}",
             "loading": "Loading time data...",
             "noHours": "No time data found"
+        },
+        "yearsList": {
+            "title": "Browse by Years",
+            "description": "Organize your music by release year and decade",
+            "decadeTitle": "Decades",
+            "recentYearsTitle": "Recent Years",
+            "allYearsTitle": "All Years"
         }
     },
     "player": {

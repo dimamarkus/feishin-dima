@@ -92,6 +92,12 @@ export const sidebarItems: SidebarItemType[] = [
         route: AppRoute.LIBRARY_TIME,
     },
     {
+        disabled: false,
+        id: 'Years',
+        label: i18n.t('page.sidebar.years'),
+        route: AppRoute.LIBRARY_YEARS,
+    },
+    {
         disabled: true,
         id: 'Playlists',
         label: i18n.t('page.sidebar.playlists'),

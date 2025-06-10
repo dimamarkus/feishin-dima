@@ -86,6 +86,24 @@ const TimeRangePlaylistRoute = lazy(() =>
     })),
 );
 
+const YearsListRoute = lazy(() =>
+    import('/@/renderer/features/years/components/years-overview-route').then((module) => ({
+        default: module.YearsOverviewRoute,
+    })),
+);
+
+const YearsDetailRoute = lazy(() =>
+    import('/@/renderer/features/years/components/years-playlist-route').then((module) => ({
+        default: module.YearsPlaylistRoute,
+    })),
+);
+
+const YearsDecadeRoute = lazy(() =>
+    import('/@/renderer/features/years/components/years-decade-route').then((module) => ({
+        default: module.YearsDecadeRoute,
+    })),
+);
+
 const SettingsRoute = lazy(() => import('/@/renderer/features/settings/routes/settings-route'));
 
 const SearchRoute = lazy(() => import('/@/renderer/features/search/routes/search-route'));
@@ -192,6 +210,23 @@ export const AppRouter = () => {
                                     errorElement={<RouteErrorBoundary />}
                                     path={AppRoute.LIBRARY_TIME_RANGE}
                                 />
+                                <Route path={AppRoute.LIBRARY_YEARS}>
+                                    <Route
+                                        element={<YearsListRoute />}
+                                        errorElement={<RouteErrorBoundary />}
+                                        index
+                                    />
+                                    <Route
+                                        element={<YearsDetailRoute />}
+                                        errorElement={<RouteErrorBoundary />}
+                                        path={AppRoute.LIBRARY_YEARS_DETAIL}
+                                    />
+                                    <Route
+                                        element={<YearsDecadeRoute />}
+                                        errorElement={<RouteErrorBoundary />}
+                                        path={AppRoute.LIBRARY_YEARS_DECADE}
+                                    />
+                                </Route>
                                 <Route
                                     element={<AlbumListRoute />}
                                     errorElement={<RouteErrorBoundary />}

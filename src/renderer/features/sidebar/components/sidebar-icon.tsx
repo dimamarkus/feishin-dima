@@ -1,6 +1,8 @@
 import {
     RiAlbumFill,
     RiAlbumLine,
+    RiCalendarEventFill,
+    RiCalendarEventLine,
     RiFlag2Fill,
     RiFlag2Line,
     RiFolder3Fill,
@@ -64,6 +66,9 @@ export const SidebarIcon = ({ active, route, size }: SidebarIconProps) => {
         case AppRoute.LIBRARY_TIME:
             if (active) return <RiTimeFill size={size} />;
             return <RiTimeLine size={size} />;
+        case AppRoute.LIBRARY_YEARS:
+            if (active) return <RiCalendarEventFill size={size} />;
+            return <RiCalendarEventLine size={size} />;
         case AppRoute.NOW_PLAYING:
             if (active) return <RiPlayFill size={size} />;
             return <RiPlayLine size={size} />;
