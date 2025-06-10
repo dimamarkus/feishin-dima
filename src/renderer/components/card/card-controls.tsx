@@ -85,12 +85,12 @@ const ControlsRow = styled.div`
 //   padding: 0.5rem;
 // `;
 
-// const CenterControls = styled(ControlsRow)`
-//   display: flex;
-//   align-items: center;
-//   justify-content: center;
-//   padding: 0.5rem;
-// `;
+const CenterControls = styled(ControlsRow)`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+`;
 
 const BottomControls = styled(ControlsRow)`
     display: flex;
@@ -106,10 +106,12 @@ const FavoriteWrapper = styled.span<{ isFavorite: boolean }>`
 `;
 
 export const CardControls = ({
+    centered = true,
     handlePlayQueueAdd,
     itemData,
     itemType,
 }: {
+    centered?: boolean;
     handlePlayQueueAdd?: (options: PlayQueueAddOptions) => void;
     itemData: any;
     itemType: LibraryItem;
@@ -132,6 +134,18 @@ export const CardControls = ({
         itemType,
         itemType === LibraryItem.ALBUM ? ALBUM_CONTEXT_MENU_ITEMS : ARTIST_CONTEXT_MENU_ITEMS,
     );
+
+    if (centered) {
+        return (
+            <GridCardControlsContainer>
+                <CenterControls>
+                    <PlayButton onClick={handlePlay}>
+                        <RiPlayFill size={25} />
+                    </PlayButton>
+                </CenterControls>
+            </GridCardControlsContainer>
+        );
+    }
 
     return (
         <GridCardControlsContainer>

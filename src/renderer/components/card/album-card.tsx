@@ -80,9 +80,14 @@ const Image = styled(SimpleImg)`
 
 const ControlsContainer = styled.div`
     position: absolute;
-    bottom: 0;
+    top: 0;
+    left: 0;
     z-index: 50;
     width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     opacity: 0;
     transition: all 0.2s ease-in-out;
 `;
