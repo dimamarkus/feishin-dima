@@ -6,6 +6,7 @@ import {
     RiCalendarFill,
     RiPlayListFill,
     RiPriceTag3Fill,
+    RiTimeFill,
     RiUserVoiceFill,
 } from 'react-icons/ri';
 
@@ -29,6 +30,8 @@ const Image = memo(function Image(props: ItemImagePlaceholderProps) {
             return <RiPriceTag3Fill />;
         case LibraryItem.PLAYLIST:
             return <RiPlayListFill />;
+        case LibraryItem.TIME:
+            return <RiTimeFill />;
         case LibraryItem.YEAR:
             return <RiCalendarFill />;
         default:

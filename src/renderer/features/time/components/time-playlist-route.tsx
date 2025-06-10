@@ -5,14 +5,16 @@ import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
 import { TIME_PLAYLISTS } from '../time-playlists';
+import { TimeDetailHeader } from './time-detail-header';
 
 import { VirtualInfiniteGridRef } from '/@/renderer/components/virtual-grid';
 import { ListContext } from '/@/renderer/context/list-context';
 import { usePlayQueueAdd } from '/@/renderer/features/player';
-import { AnimatedPage } from '/@/renderer/features/shared';
+import { AnimatedPage, FilterBar } from '/@/renderer/features/shared';
 import { SongListContent } from '/@/renderer/features/songs/components/song-list-content';
-import { SongListHeader } from '/@/renderer/features/songs/components/song-list-header';
+import { SongListHeaderFilters } from '/@/renderer/features/songs/components/song-list-header-filters';
 import { useSongListCount } from '/@/renderer/features/songs/queries/song-list-count-query';
+import { useSongList } from '/@/renderer/features/songs/queries/song-list-query';
 import { useCurrentServer, useListFilterByKey } from '/@/renderer/store';
 import { LibraryItem, SongListQuery, SongListSort, SortOrder } from '/@/shared/types/domain-types';
 import { Play } from '/@/shared/types/types';
@@ -69,6 +71,16 @@ export const TimePlaylistRoute = () => {
         serverId: server?.id,
     });
 
+    // Fetch songs for metadata calculation
+    const songsQuery = useSongList({
+        options: {
+            cacheTime: 1000 * 60,
+            staleTime: 1000 * 60,
+        },
+        query: { ...songListFilter, limit: 50 }, // Limit for performance, just for metadata
+        serverId: server?.id,
+    });
+
     const itemCount = itemCountCheck.data === null ? undefined : itemCountCheck.data;
 
     const handlePlay = useCallback(
@@ -107,17 +119,21 @@ export const TimePlaylistRoute = () => {
         );
     }
 
-    const title = `${timePlaylist.icon} ${timePlaylist.displayName}`;
-
     return (
         <AnimatedPage key={`time-playlist-${timeId}`}>
             <ListContext.Provider value={providerValue}>
-                <SongListHeader
-                    gridRef={gridRef}
-                    itemCount={itemCount}
-                    tableRef={tableRef}
-                    title={title}
+                <TimeDetailHeader
+                    songCount={itemCount}
+                    songs={songsQuery.data?.items || []}
+                    timeValue={timePlaylist.displayName}
                 />
+                <FilterBar>
+                    <SongListHeaderFilters
+                        gridRef={gridRef}
+                        itemCount={itemCount}
+                        tableRef={tableRef}
+                    />
+                </FilterBar>
                 <SongListContent
                     gridRef={gridRef}
                     itemCount={itemCount}
