@@ -5,6 +5,7 @@ export { ItemImagePlaceholder } from './components/item-image-placeholder';
 export { LibraryHeader } from './components/library-header';
 export { LibraryHeaderBar } from './components/library-header-bar';
 export { OrderToggleButton } from './components/order-toggle-button';
+export { PlayButton } from './components/play-button';
 export { ResizeHandle } from './components/resize-handle';
 export { StylesFilterDropdown } from './components/styles-filter-dropdown';
 export * from './mutations/create-favorite-mutation';
