@@ -4,14 +4,14 @@ import { useCallback, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { YEAR_PLAYLISTS } from '../years-playlists';
-import { YearDetailHeader } from './year-detail-header';
 import { YearAlbumListFilters } from './year-album-list-filters';
+import { YearDetailHeader } from './year-detail-header';
 
 import { VirtualInfiniteGridRef } from '/@/renderer/components/virtual-grid';
 import { ListContext } from '/@/renderer/context/list-context';
 import { AlbumListContent } from '/@/renderer/features/albums/components/album-list-content';
-import { useAlbumList } from '/@/renderer/features/albums/queries/album-list-query';
 import { useAlbumListCount } from '/@/renderer/features/albums/queries/album-list-count-query';
+import { useAlbumList } from '/@/renderer/features/albums/queries/album-list-query';
 import { usePlayQueueAdd } from '/@/renderer/features/player';
 import { AnimatedPage, FilterBar } from '/@/renderer/features/shared';
 import { useCurrentServer, useListFilterByKey } from '/@/renderer/store';
