@@ -829,10 +829,31 @@ export const useSettingsStore = create<SettingsSlice>()(
                     }
                 }
 
+                if (version <= 11) {
+                    const state = persistedState as SettingsSlice;
+                    // Add Years to existing sidebar configurations if it doesn't exist
+                    const hasYears = state.general.sidebarItems.some((item) => item.id === 'Years');
+                    if (!hasYears) {
+                        // Find the position after Time
+                        const timeIndex = state.general.sidebarItems.findIndex(
+                            (item) => item.id === 'Time',
+                        );
+                        const insertIndex =
+                            timeIndex >= 0 ? timeIndex + 1 : state.general.sidebarItems.length;
+
+                        state.general.sidebarItems.splice(insertIndex, 0, {
+                            disabled: false,
+                            id: 'Years',
+                            label: i18n.t('page.sidebar.years'),
+                            route: AppRoute.LIBRARY_YEARS,
+                        });
+                    }
+                }
+
                 return persistedState;
             },
             name: 'store_settings',
-            version: 11,
+            version: 12,
         },
     ),
 );
