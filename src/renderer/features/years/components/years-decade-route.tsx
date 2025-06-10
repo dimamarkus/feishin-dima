@@ -13,7 +13,12 @@ import { useAlbumListCount } from '/@/renderer/features/albums/queries/album-lis
 import { usePlayQueueAdd } from '/@/renderer/features/player';
 import { AnimatedPage } from '/@/renderer/features/shared';
 import { useCurrentServer, useListFilterByKey } from '/@/renderer/store';
-import { AlbumListQuery, LibraryItem } from '/@/shared/types/domain-types';
+import {
+    AlbumListQuery,
+    AlbumListSort,
+    LibraryItem,
+    SortOrder,
+} from '/@/shared/types/domain-types';
 import { Play } from '/@/shared/types/types';
 
 export const YearsDecadeRoute = () => {
@@ -52,7 +57,11 @@ export const YearsDecadeRoute = () => {
 
     // Use useListFilterByKey with the existing 'album' key
     const albumListFilter = useListFilterByKey<AlbumListQuery>({
-        filter: customFilters,
+        filter: {
+            ...customFilters,
+            sortBy: AlbumListSort.YEAR,
+            sortOrder: SortOrder.ASC,
+        },
         key: pageKey,
     });
 

@@ -1,11 +1,14 @@
+import { Flex, Group, Stack } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { YEAR_DECADES, YEAR_INDIVIDUALS } from '../years-playlists';
 
+import { Text, TextTitle } from '/@/renderer/components';
 import { PageHeader } from '/@/renderer/components/page-header';
-import { Text } from '/@/renderer/components/text';
 import { AnimatedPage } from '/@/renderer/features/shared';
+import { FilterBar, LibraryHeaderBar } from '/@/renderer/features/shared';
 
 const ContentContainer = styled.div`
     display: flex;
@@ -13,17 +16,7 @@ const ContentContainer = styled.div`
     height: 100%;
 `;
 
-const HeaderContainer = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px;
-    border-bottom: 1px solid var(--generic-border);
-`;
-
-const YearIcon = styled.div`
-    font-size: 24px;
-`;
+// Removed unused HeaderContainer and YearIcon styled components
 
 const HelpText = styled.div`
     background-color: var(--primary-bg);
@@ -63,13 +56,7 @@ const Section = styled.div`
     }
 `;
 
-const SectionTitle = styled.div`
-    margin-bottom: 16px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--generic-border-subtle);
-    font-size: 1.25rem;
-    font-weight: 600;
-`;
+// Removed unused SectionTitle styled component - now using TextTitle
 
 const Grid = styled.div`
     display: grid;
@@ -146,13 +133,6 @@ interface YearCardDisplayProps {
 const YearCardDisplay = ({ onCardClick, yearPlaylist }: YearCardDisplayProps) => {
     const yearId = yearPlaylist.id.replace('year-', '');
 
-    let description = '';
-    if (yearPlaylist.type === 'decade') {
-        description = 'Browse albums from this decade';
-    } else {
-        description = `Albums released in ${yearPlaylist.displayName}`;
-    }
-
     return (
         <YearCard
             key={yearPlaylist.id}
@@ -162,7 +142,6 @@ const YearCardDisplay = ({ onCardClick, yearPlaylist }: YearCardDisplayProps) =>
                 <CardIcon>{yearPlaylist.icon}</CardIcon>
                 <div>
                     <CardTitle>{yearPlaylist.displayName}</CardTitle>
-                    <CardDescription>{description}</CardDescription>
                 </div>
             </CardHeader>
         </YearCard>
@@ -170,6 +149,7 @@ const YearCardDisplay = ({ onCardClick, yearPlaylist }: YearCardDisplayProps) =>
 };
 
 export const YearsOverviewRoute = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const handleCardClick = (yearId: string) => {
@@ -186,98 +166,95 @@ export const YearsOverviewRoute = () => {
         navigate(`/library/years/${year}`);
     };
 
-    // Get recent years (last 10 years)
-    const currentYear = new Date().getFullYear();
-    const recentYears = Array.from({ length: 10 }, (_, i) => currentYear - i);
+    // Calculate total years (decades + individuals)
+    const totalYears = YEAR_DECADES.length + YEAR_INDIVIDUALS.length;
 
     return (
         <AnimatedPage>
-            <ContentContainer>
+            <Stack spacing={0}>
                 <PageHeader backgroundColor="var(--titlebar-bg)">
-                    <HeaderContainer>
-                        <YearIcon>📅</YearIcon>
-                        <div>
-                            <Text
-                                size="lg"
-                                weight={600}
-                            >
-                                Years
-                            </Text>
-                            <Text opacity={0.8}>Browse music by release year and decade</Text>
-                        </div>
-                    </HeaderContainer>
+                    <Flex
+                        justify="space-between"
+                        w="100%"
+                    >
+                        <LibraryHeaderBar>
+                            <LibraryHeaderBar.Title>
+                                {t('page.yearsList.title')}
+                            </LibraryHeaderBar.Title>
+                            <LibraryHeaderBar.Badge>{totalYears}</LibraryHeaderBar.Badge>
+                        </LibraryHeaderBar>
+                        <Group />
+                    </Flex>
                 </PageHeader>
+                <FilterBar />
+                <ContentContainer>
+                    <HelpText>
+                        <h3>About the Years Feature</h3>
+                        <p>
+                            Browse your music library organized by release year. Explore albums from
+                            specific years or browse entire decades to discover music from different
+                            eras.
+                        </p>
+                        <p>
+                            Albums are organized based on their <code>releaseYear</code> metadata.
+                            You can:
+                        </p>
+                        <ul>
+                            <li>
+                                Browse by <strong>decades</strong> for broad exploration
+                            </li>
+                            <li>
+                                Browse by <strong>specific years</strong> for precise discovery
+                            </li>
+                            <li>See album grids for each time period</li>
+                        </ul>
+                    </HelpText>
 
-                <HelpText>
-                    <h3>About the Years Feature</h3>
-                    <p>
-                        Browse your music library organized by release year. Explore albums from
-                        specific years or browse entire decades to discover music from different
-                        eras.
-                    </p>
-                    <p>
-                        Albums are organized based on their <code>releaseYear</code> metadata. You
-                        can:
-                    </p>
-                    <ul>
-                        <li>
-                            Browse by <strong>decades</strong> for broad exploration
-                        </li>
-                        <li>
-                            Browse by <strong>specific years</strong> for precise discovery
-                        </li>
-                        <li>See album grids for each time period</li>
-                    </ul>
-                </HelpText>
+                    <GridContainer>
+                        <Section>
+                            <TextTitle
+                                order={2}
+                                weight={700}
+                            >
+                                Decades
+                            </TextTitle>
+                            <Grid>
+                                {YEAR_DECADES.map((yearPlaylist) => (
+                                    <YearCardDisplay
+                                        key={yearPlaylist.id}
+                                        onCardClick={handleCardClick}
+                                        yearPlaylist={yearPlaylist}
+                                    />
+                                ))}
+                            </Grid>
+                        </Section>
 
-                <GridContainer>
-                    <Section>
-                        <SectionTitle>Decades</SectionTitle>
-                        <Grid>
-                            {YEAR_DECADES.map((yearPlaylist) => (
-                                <YearCardDisplay
-                                    key={yearPlaylist.id}
-                                    onCardClick={handleCardClick}
-                                    yearPlaylist={yearPlaylist}
-                                />
-                            ))}
-                        </Grid>
-                    </Section>
-
-                    <Section>
-                        <SectionTitle>Recent Years</SectionTitle>
-                        <YearsGrid>
-                            {recentYears.map((year) => (
-                                <YearButton
-                                    key={year}
-                                    onClick={() => handleYearClick(year)}
-                                >
-                                    {year}
-                                </YearButton>
-                            ))}
-                        </YearsGrid>
-                    </Section>
-
-                    <Section>
-                        <SectionTitle>All Years</SectionTitle>
-                        <YearsGrid>
-                            {YEAR_INDIVIDUALS.slice()
-                                .reverse()
-                                .map((yearPlaylist) => {
-                                    const year = parseInt(yearPlaylist.displayName);
-                                    return (
-                                        <YearButton
-                                            key={year}
-                                            onClick={() => handleYearClick(year)}
-                                        >
-                                            {year}
-                                        </YearButton>
-                                    );
-                                })}
-                        </YearsGrid>
-                    </Section>
-                </GridContainer>
-            </ContentContainer>
+                        <Section>
+                            <TextTitle
+                                order={2}
+                                weight={700}
+                            >
+                                All Years
+                            </TextTitle>
+                            <YearsGrid>
+                                {YEAR_INDIVIDUALS.slice()
+                                    .reverse()
+                                    .map((yearPlaylist) => {
+                                        const year = parseInt(yearPlaylist.displayName);
+                                        return (
+                                            <YearButton
+                                                key={year}
+                                                onClick={() => handleYearClick(year)}
+                                            >
+                                                {year}
+                                            </YearButton>
+                                        );
+                                    })}
+                            </YearsGrid>
+                        </Section>
+                    </GridContainer>
+                </ContentContainer>
+            </Stack>
         </AnimatedPage>
     );
 };

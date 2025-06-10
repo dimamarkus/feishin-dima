@@ -1,3 +1,4 @@
+import { Flex, Group, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
@@ -5,9 +6,10 @@ import styled from 'styled-components';
 import { TIME_HOURS, TIME_PERIODS } from '../time-playlists';
 import { TimeClock } from './time-clock';
 
+import { Text, TextTitle } from '/@/renderer/components';
 import { PageHeader } from '/@/renderer/components/page-header';
-import { Text } from '/@/renderer/components/text';
 import { AnimatedPage } from '/@/renderer/features/shared';
+import { FilterBar, LibraryHeaderBar } from '/@/renderer/features/shared';
 import { useSongList } from '/@/renderer/features/songs/queries/song-list-query';
 import { useCurrentServer } from '/@/renderer/store';
 import { SongListSort, SortOrder } from '/@/shared/types/domain-types';
@@ -18,17 +20,7 @@ const ContentContainer = styled.div`
     height: 100%;
 `;
 
-const HeaderContainer = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px;
-    border-bottom: 1px solid var(--generic-border);
-`;
-
-const TimeIcon = styled.div`
-    font-size: 24px;
-`;
+// Removed unused HeaderContainer and TimeIcon styled components
 
 const HelpText = styled.div`
     background-color: var(--primary-bg);
@@ -68,11 +60,7 @@ const Section = styled.div`
     }
 `;
 
-const SectionTitle = styled(Text)`
-    margin-bottom: 16px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--generic-border-subtle);
-`;
+// Removed unused SectionTitle styled component - now using TextTitle
 
 const Grid = styled.div`
     display: grid;
@@ -159,86 +147,109 @@ export const TimeOverviewRoute = () => {
         navigate(`/library/time/${timeId}`);
     };
 
+    // 24 hours in a day
+    const totalHours = 24;
+
     return (
         <AnimatedPage>
-            <ContentContainer>
+            <Stack spacing={0}>
                 <PageHeader backgroundColor="var(--titlebar-bg)">
-                    <HeaderContainer>
-                        <TimeIcon>🕐</TimeIcon>
-                        <div>
-                            <Text>Time</Text>
-                            <Text>Browse music by time periods and hours</Text>
-                        </div>
-                    </HeaderContainer>
+                    <Flex
+                        justify="space-between"
+                        w="100%"
+                    >
+                        <LibraryHeaderBar>
+                            <LibraryHeaderBar.Title>Time of Day</LibraryHeaderBar.Title>
+                            <LibraryHeaderBar.Badge>{totalHours}</LibraryHeaderBar.Badge>
+                        </LibraryHeaderBar>
+                        <Group />
+                    </Flex>
                 </PageHeader>
+                <FilterBar />
+                <ContentContainer>
+                    <HelpText>
+                        <h3>About the Time Feature</h3>
+                        <p>
+                            This feature lets you browse songs based on time of day information
+                            stored in your music metadata. To use it effectively, your music files
+                            should have time tags in their metadata.
+                        </p>
+                        <p>
+                            The Time feature searches for time-related terms (like <code>3am</code>,{' '}
+                            <code>7pm</code>, etc.) in your song metadata. If you&apos;re not seeing
+                            any results, you may need to:
+                        </p>
+                        <ul>
+                            <li>
+                                Add time tags to your music metadata (in fields like lyricist,
+                                comment, or tags)
+                            </li>
+                            <li>
+                                Use common time formats like <code>3am</code>, <code>15:00</code>,{' '}
+                                <code>3:00 PM</code>
+                            </li>
+                            <li>Ensure your music server has indexed these fields</li>
+                        </ul>
+                    </HelpText>
 
-                <HelpText>
-                    <h3>About the Time Feature</h3>
-                    <p>
-                        This feature lets you browse songs based on time of day information stored
-                        in your music metadata. To use it effectively, your music files should have
-                        time tags in their metadata.
-                    </p>
-                    <p>
-                        The Time feature searches for time-related terms (like <code>3am</code>,{' '}
-                        <code>7pm</code>, etc.) in your song metadata. If you&apos;re not seeing any
-                        results, you may need to:
-                    </p>
-                    <ul>
-                        <li>
-                            Add time tags to your music metadata (in fields like lyricist, comment,
-                            or tags)
-                        </li>
-                        <li>
-                            Use common time formats like <code>3am</code>, <code>15:00</code>,{' '}
-                            <code>3:00 PM</code>
-                        </li>
-                        <li>Ensure your music server has indexed these fields</li>
-                    </ul>
-                </HelpText>
+                    <GridContainer>
+                        <ClockSection>
+                            <TextTitle
+                                order={2}
+                                weight={700}
+                            >
+                                Interactive Clock
+                            </TextTitle>
+                            <Text
+                                style={{
+                                    marginBottom: '20px',
+                                    opacity: 0.8,
+                                    textAlign: 'center',
+                                }}
+                            >
+                                Click on any hour to explore music for that time
+                            </Text>
+                            <TimeClock size={360} />
+                        </ClockSection>
 
-                <GridContainer>
-                    <ClockSection>
-                        <SectionTitle>Interactive Clock</SectionTitle>
-                        <Text
-                            style={{
-                                marginBottom: '20px',
-                                opacity: 0.8,
-                                textAlign: 'center',
-                            }}
-                        >
-                            Click on any hour to explore music for that time
-                        </Text>
-                        <TimeClock size={360} />
-                    </ClockSection>
+                        <Section>
+                            <TextTitle
+                                order={2}
+                                weight={700}
+                            >
+                                Time Periods
+                            </TextTitle>
+                            <Grid>
+                                {TIME_PERIODS.map((timePlaylist) => (
+                                    <TimeCardDisplay
+                                        key={timePlaylist.id}
+                                        onCardClick={handleCardClick}
+                                        timePlaylist={timePlaylist}
+                                    />
+                                ))}
+                            </Grid>
+                        </Section>
 
-                    <Section>
-                        <SectionTitle>Time Periods</SectionTitle>
-                        <Grid>
-                            {TIME_PERIODS.map((timePlaylist) => (
-                                <TimeCardDisplay
-                                    key={timePlaylist.id}
-                                    onCardClick={handleCardClick}
-                                    timePlaylist={timePlaylist}
-                                />
-                            ))}
-                        </Grid>
-                    </Section>
-
-                    <Section>
-                        <SectionTitle>Individual Hours</SectionTitle>
-                        <Grid>
-                            {TIME_HOURS.map((timePlaylist) => (
-                                <TimeCardDisplay
-                                    key={timePlaylist.id}
-                                    onCardClick={handleCardClick}
-                                    timePlaylist={timePlaylist}
-                                />
-                            ))}
-                        </Grid>
-                    </Section>
-                </GridContainer>
-            </ContentContainer>
+                        <Section>
+                            <TextTitle
+                                order={2}
+                                weight={700}
+                            >
+                                Individual Hours
+                            </TextTitle>
+                            <Grid>
+                                {TIME_HOURS.map((timePlaylist) => (
+                                    <TimeCardDisplay
+                                        key={timePlaylist.id}
+                                        onCardClick={handleCardClick}
+                                        timePlaylist={timePlaylist}
+                                    />
+                                ))}
+                            </Grid>
+                        </Section>
+                    </GridContainer>
+                </ContentContainer>
+            </Stack>
         </AnimatedPage>
     );
 };

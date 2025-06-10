@@ -267,6 +267,19 @@ export const NavidromeController: ControllerEndpoint = {
     getAlbumList: async (args) => {
         const { apiClientProps, query } = args;
 
+        // Handle year filtering for Navidrome
+        let yearFilter: number | undefined;
+        if (query.minYear && query.maxYear && query.minYear === query.maxYear) {
+            // Single year filtering
+            yearFilter = query.minYear;
+        } else if (query.minYear && query.maxYear && query.minYear !== query.maxYear) {
+            // Range filtering - Navidrome doesn't support this natively
+            // For now, we'll filter client-side by fetching all albums and filtering
+            console.warn(
+                'Navidrome does not support year range filtering natively. Consider using Subsonic API.',
+            );
+        }
+
         const res = await ndApiClient(apiClientProps).getAlbumList({
             query: {
                 _end: query.startIndex + (query.limit || 0),
@@ -277,6 +290,7 @@ export const NavidromeController: ControllerEndpoint = {
                 compilation: query.compilation,
                 genre_id: query.genres?.[0],
                 name: query.searchTerm,
+                year: yearFilter,
                 ...query._custom?.navidrome,
                 starred: query.favorite,
                 ...excludeMissing(apiClientProps.server),
@@ -287,17 +301,37 @@ export const NavidromeController: ControllerEndpoint = {
             throw new Error('Failed to get album list');
         }
 
+        let albums = res.body.data.map((album) => ndNormalize.album(album, apiClientProps.server));
+
+        // Client-side filtering for year ranges if needed
+        if (query.minYear && query.maxYear && query.minYear !== query.maxYear) {
+            albums = albums.filter((album) => {
+                const albumYear = album.releaseYear;
+                return albumYear && albumYear >= query.minYear! && albumYear <= query.maxYear!;
+            });
+        }
+
         return {
-            items: res.body.data.map((album) => ndNormalize.album(album, apiClientProps.server)),
+            items: albums,
             startIndex: query?.startIndex || 0,
             totalRecordCount: Number(res.body.headers.get('x-total-count') || 0),
         };
     },
-    getAlbumListCount: async ({ apiClientProps, query }) =>
-        NavidromeController.getAlbumList({
+    getAlbumListCount: async ({ apiClientProps, query }) => {
+        // For year range filtering, we need to get all albums and filter client-side
+        if (query.minYear && query.maxYear && query.minYear !== query.maxYear) {
+            const result = await NavidromeController.getAlbumList({
+                apiClientProps,
+                query: { ...query, limit: 9999, startIndex: 0 },
+            });
+            return result!.items.length;
+        }
+
+        return NavidromeController.getAlbumList({
             apiClientProps,
             query: { ...query, limit: 1, startIndex: 0 },
-        }).then((result) => result!.totalRecordCount!),
+        }).then((result) => result!.totalRecordCount!);
+    },
     getArtistList: async (args) => {
         const { apiClientProps, query } = args;
 

@@ -443,7 +443,7 @@
             "title": "$t(entity.track_other)"
         },
         "timeList": {
-            "title": "Browse by Time",
+            "title": "Time",
             "description": "Organize your music by time of day",
             "hourStats": "{{hours}} hours • {{songs}} songs with time data",
             "noTimeData": "No songs found with time information",
@@ -455,7 +455,7 @@
             "noHours": "No time data found"
         },
         "yearsList": {
-            "title": "Browse by Years",
+            "title": "Years",
             "description": "Organize your music by release year and decade",
             "decadeTitle": "Decades",
             "recentYearsTitle": "Recent Years",

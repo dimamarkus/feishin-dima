@@ -13,7 +13,12 @@ import { useAlbumListCount } from '/@/renderer/features/albums/queries/album-lis
 import { usePlayQueueAdd } from '/@/renderer/features/player';
 import { AnimatedPage } from '/@/renderer/features/shared';
 import { useCurrentServer, useListFilterByKey } from '/@/renderer/store';
-import { AlbumListQuery, LibraryItem } from '/@/shared/types/domain-types';
+import {
+    AlbumListQuery,
+    AlbumListSort,
+    LibraryItem,
+    SortOrder,
+} from '/@/shared/types/domain-types';
 import { Play } from '/@/shared/types/types';
 
 export const YearsPlaylistRoute = () => {
@@ -48,16 +53,21 @@ export const YearsPlaylistRoute = () => {
                 minYear,
             };
         } else {
-            // For individual years, filter by specific year
+            // For individual years, use the same year for both min and max to filter by specific year
             return {
-                year: yearPlaylist.releaseYearValue,
+                maxYear: yearPlaylist.releaseYearValue,
+                minYear: yearPlaylist.releaseYearValue,
             };
         }
     }, [yearPlaylist?.releaseYearValue]);
 
     // Use useListFilterByKey with the existing 'album' key
     const albumListFilter = useListFilterByKey<AlbumListQuery>({
-        filter: customFilters,
+        filter: {
+            ...customFilters,
+            sortBy: AlbumListSort.YEAR,
+            sortOrder: SortOrder.ASC,
+        },
         key: pageKey,
     });
 
