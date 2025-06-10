@@ -10,9 +10,6 @@ import { Text, TextTitle } from '/@/renderer/components';
 import { PageHeader } from '/@/renderer/components/page-header';
 import { AnimatedPage } from '/@/renderer/features/shared';
 import { FilterBar, LibraryHeaderBar } from '/@/renderer/features/shared';
-import { useSongList } from '/@/renderer/features/songs/queries/song-list-query';
-import { useCurrentServer } from '/@/renderer/store';
-import { SongListSort, SortOrder } from '/@/shared/types/domain-types';
 
 const ContentContainer = styled.div`
     display: flex;
@@ -98,11 +95,6 @@ const CardTitle = styled(Text)`
     font-weight: 500;
 `;
 
-const CardCount = styled(Text)`
-    font-size: 12px;
-    opacity: 0.7;
-`;
-
 const ClockSection = styled.div`
     display: flex;
     flex-direction: column;
@@ -140,7 +132,6 @@ const TimeCardDisplay = ({ onCardClick, timePlaylist }: TimeCardDisplayProps) =>
 };
 
 export const TimeOverviewRoute = () => {
-    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const handleCardClick = (timeId: string) => {

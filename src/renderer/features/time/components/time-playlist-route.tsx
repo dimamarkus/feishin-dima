@@ -1,7 +1,6 @@
 import type { AgGridReact as AgGridReactType } from '@ag-grid-community/react/lib/agGridReact';
 
 import { useCallback, useMemo, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
 import { TIME_PLAYLISTS } from '../time-playlists';
@@ -16,11 +15,10 @@ import { SongListContent } from '/@/renderer/features/songs/components/song-list
 import { useSongListCount } from '/@/renderer/features/songs/queries/song-list-count-query';
 import { useSongList } from '/@/renderer/features/songs/queries/song-list-query';
 import { useCurrentServer, useListFilterByKey } from '/@/renderer/store';
-import { LibraryItem, SongListQuery, SongListSort, SortOrder } from '/@/shared/types/domain-types';
+import { LibraryItem, SongListQuery } from '/@/shared/types/domain-types';
 import { Play } from '/@/shared/types/types';
 
 export const TimePlaylistRoute = () => {
-    const { t } = useTranslation();
     const { timeId } = useParams() as { timeId: string };
     const server = useCurrentServer();
     const gridRef = useRef<null | VirtualInfiniteGridRef>(null);

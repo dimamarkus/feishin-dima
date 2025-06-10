@@ -1,4 +1,4 @@
-import { Group, Paper, Text, UnstyledButton } from '@mantine/core';
+import { Paper, Text, UnstyledButton } from '@mantine/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -120,9 +120,6 @@ export const TimeClock = ({ size = 300 }: TimeClockProps) => {
     // Handle center time click to navigate to current hour's playlist
     const handleCenterTimeClick = () => {
         const currentHour = currentTime.getHours();
-        const period = currentHour < 12 ? 'am' : 'pm';
-        const hour12 = currentHour % 12 || 12; // Convert 0 to 12 for 12 AM
-
         const playlistId = currentHour.toString().padStart(2, '0');
         navigate(`/library/time/${playlistId}`);
     };
