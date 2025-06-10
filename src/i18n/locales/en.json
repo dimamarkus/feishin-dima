@@ -158,7 +158,11 @@
         "song_one": "song",
         "song_other": "songs",
         "trackWithCount_one": "{{count}} track",
-        "trackWithCount_other": "{{count}} tracks"
+        "trackWithCount_other": "{{count}} tracks",
+        "year_one": "year",
+        "year_other": "years",
+        "yearWithCount_one": "{{count}} year",
+        "yearWithCount_other": "{{count}} years"
     },
     "error": {
         "apiRouteError": "unable to route request",
