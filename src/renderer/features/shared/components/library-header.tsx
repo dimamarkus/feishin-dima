@@ -50,6 +50,8 @@ export const LibraryHeader = forwardRef(
                     return t('entity.playlist', { count: 1 });
                 case LibraryItem.SONG:
                     return t('entity.track', { count: 1 });
+                case LibraryItem.YEAR:
+                    return t('entity.year', { count: 1 });
                 default:
                     return t('common.unknown');
             }

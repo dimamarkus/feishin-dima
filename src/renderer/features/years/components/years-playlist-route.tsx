@@ -4,14 +4,16 @@ import { useCallback, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { YEAR_PLAYLISTS } from '../years-playlists';
+import { YearDetailHeader } from './year-detail-header';
 
 import { VirtualInfiniteGridRef } from '/@/renderer/components/virtual-grid';
 import { ListContext } from '/@/renderer/context/list-context';
 import { AlbumListContent } from '/@/renderer/features/albums/components/album-list-content';
-import { AlbumListHeader } from '/@/renderer/features/albums/components/album-list-header';
+import { AlbumListHeaderFilters } from '/@/renderer/features/albums/components/album-list-header-filters';
 import { useAlbumListCount } from '/@/renderer/features/albums/queries/album-list-count-query';
+import { useAlbumList } from '/@/renderer/features/albums/queries/album-list-query';
 import { usePlayQueueAdd } from '/@/renderer/features/player';
-import { AnimatedPage } from '/@/renderer/features/shared';
+import { AnimatedPage, FilterBar } from '/@/renderer/features/shared';
 import { useCurrentServer, useListFilterByKey } from '/@/renderer/store';
 import {
     AlbumListQuery,
@@ -80,6 +82,16 @@ export const YearsPlaylistRoute = () => {
         serverId: server?.id,
     });
 
+    // Fetch albums for metadata calculation
+    const albumsQuery = useAlbumList({
+        options: {
+            cacheTime: 1000 * 60,
+            staleTime: 1000 * 60,
+        },
+        query: { ...albumListFilter, limit: 50 }, // Limit for performance, just for metadata
+        serverId: server?.id,
+    });
+
     const itemCount = itemCountCheck.data === null ? undefined : itemCountCheck.data;
 
     const handlePlay = useCallback(
@@ -118,23 +130,21 @@ export const YearsPlaylistRoute = () => {
         );
     }
 
-    // Create title based on type
-    let title = '';
-    if (yearPlaylist.type === 'decade') {
-        title = `${yearPlaylist.icon} ${yearPlaylist.displayName} Albums`;
-    } else {
-        title = `${yearPlaylist.icon} ${yearPlaylist.displayName} Albums`;
-    }
-
     return (
         <AnimatedPage key={`year-playlist-${yearId}`}>
             <ListContext.Provider value={providerValue}>
-                <AlbumListHeader
-                    gridRef={gridRef}
-                    itemCount={itemCount}
-                    tableRef={tableRef}
-                    title={title}
+                <YearDetailHeader
+                    albumCount={itemCount}
+                    albums={albumsQuery.data?.items || []}
+                    yearValue={yearPlaylist.displayName}
                 />
+                <FilterBar>
+                    <AlbumListHeaderFilters
+                        gridRef={gridRef}
+                        itemCount={itemCount}
+                        tableRef={tableRef}
+                    />
+                </FilterBar>
                 <AlbumListContent
                     gridRef={gridRef}
                     itemCount={itemCount}

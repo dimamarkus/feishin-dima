@@ -1,7 +1,13 @@
 import { Center } from '@mantine/core';
 import clsx from 'clsx';
 import { memo } from 'react';
-import { RiAlbumFill, RiPlayListFill, RiPriceTag3Fill, RiUserVoiceFill } from 'react-icons/ri';
+import {
+    RiAlbumFill,
+    RiCalendarFill,
+    RiPlayListFill,
+    RiPriceTag3Fill,
+    RiUserVoiceFill,
+} from 'react-icons/ri';
 
 import styles from './item-image-placeholder.module.css';
 
@@ -23,6 +29,8 @@ const Image = memo(function Image(props: ItemImagePlaceholderProps) {
             return <RiPriceTag3Fill />;
         case LibraryItem.PLAYLIST:
             return <RiPlayListFill />;
+        case LibraryItem.YEAR:
+            return <RiCalendarFill />;
         default:
             return <RiAlbumFill />;
     }

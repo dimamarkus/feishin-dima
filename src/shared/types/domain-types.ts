@@ -35,6 +35,7 @@ export enum LibraryItem {
     LABEL = 'label',
     PLAYLIST = 'playlist',
     SONG = 'song',
+    YEAR = 'year',
 }
 
 export enum ServerType {

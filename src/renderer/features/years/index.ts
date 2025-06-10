@@ -1,3 +1,4 @@
+export { YearDetailHeader } from './components/year-detail-header';
 export { YearsDecadeRoute } from './components/years-decade-route';
 export { YearsListContent } from './components/years-list-content';
 export { YearsListHeader } from './components/years-list-header';
