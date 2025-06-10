@@ -221,7 +221,7 @@ export const ALBUM_CARD_ROWS: { [key: string]: CardRow<Album> } = {
             const albumLabel = LabelAggregationService.getAlbumLabel(album);
             const searchQuery = albumLabel ? `${albumLabel} ${catalogNumber}` : catalogNumber;
 
-            return `https://www.discogs.com/search?q=${encodeURIComponent(searchQuery)}&type=release`;
+            return `https://www.discogs.com/search?q=${encodeURIComponent(searchQuery)}&type=release&layout=med`;
         },
         property: 'catalogNumber',
     },

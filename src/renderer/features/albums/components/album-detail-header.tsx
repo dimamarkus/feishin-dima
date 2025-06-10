@@ -124,7 +124,7 @@ export const AlbumDetailHeader = forwardRef(
         if (detailQuery?.data?.catalogNumber) {
             const catalogNumber = detailQuery.data.catalogNumber;
             const searchQuery = albumLabel ? `${albumLabel} ${catalogNumber}` : catalogNumber;
-            const discogsUrl = `https://www.discogs.com/search?q=${encodeURIComponent(searchQuery)}&type=release`;
+            const discogsUrl = `https://www.discogs.com/search?q=${encodeURIComponent(searchQuery)}&type=release&layout=med`;
 
             metadataItems.push({
                 id: 'catalogNumber',
