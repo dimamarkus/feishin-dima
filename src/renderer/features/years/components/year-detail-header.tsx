@@ -1,12 +1,22 @@
 import { Group, Stack } from '@mantine/core';
 import { forwardRef, Fragment, Ref } from 'react';
 import { useTranslation } from 'react-i18next';
+import styled from 'styled-components';
+
+import { YearNavigation } from './year-navigation';
 
 import { Text } from '/@/renderer/components/text';
 import { LibraryHeader } from '/@/renderer/features/shared';
 import { AppRoute } from '/@/renderer/router/routes';
 import { formatDurationString } from '/@/renderer/utils';
 import { Album, LibraryItem } from '/@/shared/types/domain-types';
+
+const NavigationContainer = styled.div`
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+`;
 
 interface YearDetailHeaderProps {
     albumCount?: number;
@@ -46,26 +56,31 @@ export const YearDetailHeader = forwardRef<HTMLDivElement, YearDetailHeaderProps
         ];
 
         return (
-            <LibraryHeader
-                background={background || 'var(--card-default-bg)'}
-                imageUrl={null}
-                item={{ route: AppRoute.LIBRARY_YEARS, type: LibraryItem.YEAR }}
-                ref={ref}
-                title={yearValue}
-            >
-                <Stack>
-                    <Group>
-                        {metadataItems
-                            .filter((i) => i.enabled)
-                            .map((item, index) => (
-                                <Fragment key={`item-${item.id}-${index}`}>
-                                    {index > 0 && <Text $noSelect>•</Text>}
-                                    <Text $secondary={item.secondary}>{item.value}</Text>
-                                </Fragment>
-                            ))}
-                    </Group>
-                </Stack>
-            </LibraryHeader>
+            <div style={{ position: 'relative' }}>
+                <LibraryHeader
+                    background={background || 'var(--card-default-bg)'}
+                    imageUrl={null}
+                    item={{ route: AppRoute.LIBRARY_YEARS, type: LibraryItem.YEAR }}
+                    ref={ref}
+                    title={yearValue}
+                >
+                    <Stack>
+                        <Group>
+                            {metadataItems
+                                .filter((i) => i.enabled)
+                                .map((item, index) => (
+                                    <Fragment key={`item-${item.id}-${index}`}>
+                                        {index > 0 && <Text $noSelect>•</Text>}
+                                        <Text $secondary={item.secondary}>{item.value}</Text>
+                                    </Fragment>
+                                ))}
+                        </Group>
+                    </Stack>
+                </LibraryHeader>
+                <NavigationContainer>
+                    <YearNavigation currentYear={yearValue} />
+                </NavigationContainer>
+            </div>
         );
     },
 );
