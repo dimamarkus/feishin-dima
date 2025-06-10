@@ -87,8 +87,8 @@ const TimeRangePlaylistRoute = lazy(() =>
 );
 
 const YearsListRoute = lazy(() =>
-    import('/@/renderer/features/years/components/years-overview-route').then((module) => ({
-        default: module.YearsOverviewRoute,
+    import('/@/renderer/features/years').then((module) => ({
+        default: module.YearsListRoute,
     })),
 );
 
