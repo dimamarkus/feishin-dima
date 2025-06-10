@@ -4,7 +4,9 @@ import { AlbumCard } from '/@/renderer/components/card/album-card';
 import { ALBUM_CARD_ROWS } from '/@/renderer/components/card/card-rows';
 import { Text } from '/@/renderer/components/text';
 import { usePlayQueueAdd } from '/@/renderer/features/player';
+import { useHandleFavorite } from '/@/renderer/features/shared/hooks/use-handle-favorite';
 import { AppRoute } from '/@/renderer/router/routes';
+import { useCurrentServer } from '/@/renderer/store';
 import { usePlayButtonBehavior } from '/@/renderer/store/settings.store';
 import { Album, AlbumArtist, Artist, LibraryItem } from '/@/shared/types/domain-types';
 import { CardRow } from '/@/shared/types/types';
@@ -24,8 +26,10 @@ interface LabelDetailAlbumListProps {
 }
 
 export const LabelDetailAlbumList = ({ albums }: LabelDetailAlbumListProps) => {
+    const server = useCurrentServer();
     const handlePlayQueueAdd = usePlayQueueAdd();
     const playButtonBehavior = usePlayButtonBehavior();
+    const handleFavorite = useHandleFavorite({ gridRef: { current: null }, server });
 
     if (albums.length === 0) {
         return (
@@ -63,6 +67,7 @@ export const LabelDetailAlbumList = ({ albums }: LabelDetailAlbumListProps) => {
                             },
                         }}
                         data={album}
+                        handleFavorite={handleFavorite}
                         handlePlayQueueAdd={handlePlayQueueAdd}
                         key={album.id}
                         size={200}

@@ -7,9 +7,9 @@ import { generatePath, useNavigate } from 'react-router';
 import { SimpleImg } from 'react-simple-img';
 import styled from 'styled-components';
 
-import { CardControls } from '/@/renderer/components/card/card-controls';
 import { CardRows } from '/@/renderer/components/card/card-rows';
 import { Skeleton } from '/@/renderer/components/skeleton';
+import { GridCardControls } from '/@/renderer/components/virtual-grid/grid-card/grid-card-controls';
 import { Album, AlbumArtist, Artist, LibraryItem } from '/@/shared/types/domain-types';
 
 const CardWrapper = styled.div<{
@@ -85,9 +85,6 @@ const ControlsContainer = styled.div`
     z-index: 50;
     width: 100%;
     height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     opacity: 0;
     transition: all 0.2s ease-in-out;
 `;
@@ -117,6 +114,12 @@ interface BaseGridCardProps {
         route: CardRoute;
     };
     data: any;
+    handleFavorite?: (options: {
+        id: string[];
+        isFavorite: boolean;
+        itemType: LibraryItem;
+        serverId: string;
+    }) => void;
     handlePlayQueueAdd?: (options: PlayQueueAddOptions) => void;
     loading?: boolean;
     size: number;
@@ -125,6 +128,7 @@ interface BaseGridCardProps {
 export const AlbumCard = ({
     controls,
     data,
+    handleFavorite,
     handlePlayQueueAdd,
     loading,
     size,
@@ -179,10 +183,12 @@ export const AlbumCard = ({
                             </Center>
                         )}
                         <ControlsContainer>
-                            <CardControls
+                            <GridCardControls
+                                handleFavorite={handleFavorite || (() => {})}
                                 handlePlayQueueAdd={handlePlayQueueAdd}
                                 itemData={data}
                                 itemType={itemType}
+                                resetInfiniteLoaderCache={() => {}}
                             />
                         </ControlsContainer>
                     </ImageSection>
