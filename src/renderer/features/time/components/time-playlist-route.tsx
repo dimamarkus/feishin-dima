@@ -6,13 +6,13 @@ import { useParams } from 'react-router-dom';
 
 import { TIME_PLAYLISTS } from '../time-playlists';
 import { TimeDetailHeader } from './time-detail-header';
+import { TimeSongListFilters } from './time-song-list-filters';
 
 import { VirtualInfiniteGridRef } from '/@/renderer/components/virtual-grid';
 import { ListContext } from '/@/renderer/context/list-context';
 import { usePlayQueueAdd } from '/@/renderer/features/player';
 import { AnimatedPage, FilterBar } from '/@/renderer/features/shared';
 import { SongListContent } from '/@/renderer/features/songs/components/song-list-content';
-import { SongListHeaderFilters } from '/@/renderer/features/songs/components/song-list-header-filters';
 import { useSongListCount } from '/@/renderer/features/songs/queries/song-list-count-query';
 import { useSongList } from '/@/renderer/features/songs/queries/song-list-query';
 import { useCurrentServer, useListFilterByKey } from '/@/renderer/store';
@@ -128,9 +128,10 @@ export const TimePlaylistRoute = () => {
                     timeValue={timePlaylist.displayName}
                 />
                 <FilterBar>
-                    <SongListHeaderFilters
+                    <TimeSongListFilters
                         gridRef={gridRef}
                         itemCount={itemCount}
+                        songs={songsQuery.data?.items || []}
                         tableRef={tableRef}
                     />
                 </FilterBar>

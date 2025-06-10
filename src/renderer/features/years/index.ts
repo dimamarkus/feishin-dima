@@ -1,4 +1,5 @@
 export { YearDetailHeader } from './components/year-detail-header';
+export { YearAlbumListFilters } from './components/year-album-list-filters';
 export { YearsDecadeRoute } from './components/years-decade-route';
 export { YearsListContent } from './components/years-list-content';
 export { YearsListHeader } from './components/years-list-header';
