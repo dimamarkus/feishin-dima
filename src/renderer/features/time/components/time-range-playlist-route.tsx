@@ -1,7 +1,6 @@
 import type { AgGridReact as AgGridReactType } from '@ag-grid-community/react/lib/agGridReact';
 
 import { useCallback, useMemo, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
 import { TimeDetailHeader } from './time-detail-header';
@@ -27,7 +26,7 @@ const formatTimeForLyricist = (hour24: number): string => {
 };
 
 // Helper function to get the display format for the time range
-const formatTimeRangeDisplay = (startHour: number, endHour: number, period: string): string => {
+const formatTimeRangeDisplay = (startHour: number, endHour: number): string => {
     const formatHour = (hour: number): string => {
         if (hour === 0) return '12 AM';
         if (hour < 12) return `${hour} AM`;
@@ -39,7 +38,6 @@ const formatTimeRangeDisplay = (startHour: number, endHour: number, period: stri
 };
 
 export const TimeRangePlaylistRoute = () => {
-    const { t } = useTranslation();
     const { period, timeRangeId } = useParams() as { period: string; timeRangeId: string };
     const server = useCurrentServer();
     const gridRef = useRef<null | VirtualInfiniteGridRef>(null);
@@ -138,7 +136,7 @@ export const TimeRangePlaylistRoute = () => {
 
     // Create a title with appropriate icon and formatting
     const icon = period === 'am' ? '🌅' : '🌆';
-    const timeDisplay = formatTimeRangeDisplay(startHour, endHour, period);
+    const timeDisplay = formatTimeRangeDisplay(startHour, endHour);
     const title = `${icon} ${timeDisplay}`;
 
     return (
