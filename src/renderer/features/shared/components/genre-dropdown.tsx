@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { Button, DropdownMenu } from '/@/renderer/components';
 
@@ -34,8 +33,6 @@ export const GenreDropdown = ({
     placeholder = 'Any genre',
     value,
 }: GenreDropdownProps) => {
-    const { t } = useTranslation();
-
     const handleGenreSelect = useCallback(
         (selectedGenre: string) => {
             if (selectedGenre === 'any') {

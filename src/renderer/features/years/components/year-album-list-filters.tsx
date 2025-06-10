@@ -2,7 +2,6 @@ import type { AgGridReact as AgGridReactType } from '@ag-grid-community/react/li
 
 import { Divider } from '@mantine/core';
 import { MutableRefObject, useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { VirtualInfiniteGridRef } from '/@/renderer/components/virtual-grid';
 import { useListContext } from '/@/renderer/context/list-context';
@@ -28,7 +27,6 @@ export const YearAlbumListFilters = ({
     itemCount,
     tableRef,
 }: YearAlbumListFiltersProps) => {
-    const { t } = useTranslation();
     const server = useCurrentServer();
     const { setFilter } = useListStoreActions();
     const { customFilters, pageKey } = useListContext();
