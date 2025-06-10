@@ -1,10 +1,12 @@
 export { AnimatedPage } from './components/animated-page';
 export { FilterBar } from './components/filter-bar';
-export { GenreFilterDropdown } from './components/genre-filter-dropdown';
+export { GenreDropdown } from './components/genre-dropdown';
 export { ItemImagePlaceholder } from './components/item-image-placeholder';
 export { LibraryHeader } from './components/library-header';
 export { LibraryHeaderBar } from './components/library-header-bar';
 export { OrderToggleButton } from './components/order-toggle-button';
+export { ResizeHandle } from './components/resize-handle';
+export { StylesFilterDropdown } from './components/styles-filter-dropdown';
 export * from './mutations/create-favorite-mutation';
 export * from './mutations/delete-favorite-mutation';
 export * from './mutations/set-rating-mutation';

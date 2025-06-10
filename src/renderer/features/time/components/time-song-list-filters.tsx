@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next';
 
 import { VirtualInfiniteGridRef } from '/@/renderer/components/virtual-grid';
 import { useListContext } from '/@/renderer/context/list-context';
-import { GenreFilterDropdown } from '/@/renderer/features/shared/components/genre-filter-dropdown';
+import { GenreDropdown } from '/@/renderer/features/shared/components/genre-dropdown';
+import { StylesFilterDropdown } from '/@/renderer/features/shared/components/styles-filter-dropdown';
 import { SongListHeaderFilters } from '/@/renderer/features/songs/components/song-list-header-filters';
 import { useListFilterRefresh } from '/@/renderer/hooks/use-list-filter-refresh';
 import { useCurrentServer, useListStoreActions, useListStoreByKey } from '/@/renderer/store';
@@ -43,17 +44,20 @@ export const TimeSongListFilters = ({
 
     const isGrid = display === ListDisplayType.CARD || display === ListDisplayType.POSTER;
 
-    const handleGenreChange = useCallback(
-        (genres: string[]) => {
-            setFilter({
-                customFilters,
-                data: { genreIds: genres.length > 0 ? genres : undefined },
-                itemType: LibraryItem.SONG,
-                key: pageKey,
-            });
+    // Extract the current genre and styles from the filter
+    const currentGenre = (filter._custom as any)?.genre as string | undefined;
+    const currentStyles = filter.genreIds || [];
 
-            // Trigger refresh with the new filter
-            const newFilter = { ...filter, genreIds: genres.length > 0 ? genres : undefined };
+    const refreshWithFilters = useCallback(
+        (genre?: string, styles?: string[]) => {
+            const newFilter = {
+                ...filter,
+                _custom: {
+                    ...filter._custom,
+                    genre: genre || undefined,
+                },
+                genreIds: styles?.length ? styles : undefined,
+            };
 
             if (isGrid) {
                 handleRefreshGrid(gridRef, {
@@ -67,29 +71,51 @@ export const TimeSongListFilters = ({
                 });
             }
         },
-        [
-            customFilters,
-            filter,
-            gridRef,
-            handleRefreshGrid,
-            handleRefreshTable,
-            isGrid,
-            pageKey,
-            setFilter,
-            tableRef,
-        ],
+        [customFilters, filter, gridRef, handleRefreshGrid, handleRefreshTable, isGrid, tableRef],
     );
 
-    // Check if genre filter has options to show
-    const hasGenreOptions = useMemo(() => {
+    const handleGenreChange = useCallback(
+        (genre: string | undefined) => {
+            setFilter({
+                customFilters,
+                data: { _custom: { ...filter._custom, genre } as any },
+                itemType: LibraryItem.SONG,
+                key: pageKey,
+            });
+
+            // When genre changes, clear styles as they need to be re-filtered
+            refreshWithFilters(genre, []);
+        },
+        [customFilters, filter._custom, pageKey, refreshWithFilters, setFilter],
+    );
+
+    const handleStylesChange = useCallback(
+        (styles: string[]) => {
+            setFilter({
+                customFilters,
+                data: { genreIds: styles.length > 0 ? styles : undefined },
+                itemType: LibraryItem.SONG,
+                key: pageKey,
+            });
+
+            refreshWithFilters(currentGenre, styles);
+        },
+        [customFilters, currentGenre, pageKey, refreshWithFilters, setFilter],
+    );
+
+    // Extract available genres for the genre dropdown
+    const availableGenres = useMemo(() => {
         const genreSet = new Set<string>();
         songs.forEach((song) => {
             song.genres?.forEach((genre) => {
                 genreSet.add(genre.name);
             });
         });
-        return genreSet.size > 0;
+        return genreSet;
     }, [songs]);
+
+    // Check if we have any genres or styles available
+    const hasFilters = availableGenres.size > 0;
 
     return (
         <div style={{ position: 'relative' }}>
@@ -98,14 +124,14 @@ export const TimeSongListFilters = ({
                 itemCount={itemCount}
                 tableRef={tableRef}
             />
-            {hasGenreOptions && (
+            {hasFilters && (
                 <div
                     style={{
                         alignItems: 'center',
                         display: 'flex',
                         gap: '8px',
                         position: 'absolute',
-                        right: '80px', // Position between refresh and 3 dots button
+                        right: '160px', // Move further left to accommodate both dropdowns
                         top: '50%',
                         transform: 'translateY(-50%)',
                         zIndex: 10,
@@ -115,11 +141,18 @@ export const TimeSongListFilters = ({
                         orientation="vertical"
                         style={{ height: '20px' }}
                     />
-                    <GenreFilterDropdown
+                    <GenreDropdown
+                        availableGenres={availableGenres}
                         onChange={handleGenreChange}
-                        placeholder={t('filter.genre', { postProcess: 'titleCase' })}
+                        placeholder="Any genre"
+                        value={currentGenre}
+                    />
+                    <StylesFilterDropdown
+                        onChange={handleStylesChange}
+                        placeholder="Styles"
+                        selectedGenre={currentGenre}
                         songs={songs}
-                        value={filter.genreIds || []}
+                        value={currentStyles}
                     />
                 </div>
             )}

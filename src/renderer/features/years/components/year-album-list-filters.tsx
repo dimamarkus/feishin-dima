@@ -7,7 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { VirtualInfiniteGridRef } from '/@/renderer/components/virtual-grid';
 import { useListContext } from '/@/renderer/context/list-context';
 import { AlbumListHeaderFilters } from '/@/renderer/features/albums/components/album-list-header-filters';
-import { GenreFilterDropdown } from '/@/renderer/features/shared/components/genre-filter-dropdown';
+import { GenreDropdown } from '/@/renderer/features/shared/components/genre-dropdown';
+import { StylesFilterDropdown } from '/@/renderer/features/shared/components/styles-filter-dropdown';
 import { useListFilterRefresh } from '/@/renderer/hooks/use-list-filter-refresh';
 import { useCurrentServer, useListStoreActions, useListStoreByKey } from '/@/renderer/store';
 import { AlbumListQuery, LibraryItem } from '/@/shared/types/domain-types';
@@ -44,17 +45,20 @@ export const YearAlbumListFilters = ({
 
     const isGrid = display === ListDisplayType.CARD || display === ListDisplayType.POSTER;
 
-    const handleGenreChange = useCallback(
-        (genres: string[]) => {
-            setFilter({
-                customFilters,
-                data: { genres: genres.length > 0 ? genres : undefined },
-                itemType: LibraryItem.ALBUM,
-                key: pageKey,
-            });
+    // Extract the current genre and styles from the filter
+    const currentGenre = (filter._custom as any)?.genre as string | undefined;
+    const currentStyles = filter.genres || [];
 
-            // Trigger refresh with the new filter
-            const newFilter = { ...filter, genres: genres.length > 0 ? genres : undefined };
+    const refreshWithFilters = useCallback(
+        (genre?: string, styles?: string[]) => {
+            const newFilter = {
+                ...filter,
+                _custom: {
+                    ...filter._custom,
+                    genre: genre || undefined,
+                },
+                genres: styles?.length ? styles : undefined,
+            };
 
             if (isGrid) {
                 handleRefreshGrid(gridRef, {
@@ -68,32 +72,52 @@ export const YearAlbumListFilters = ({
                 });
             }
         },
-        [
-            customFilters,
-            filter,
-            gridRef,
-            handleRefreshGrid,
-            handleRefreshTable,
-            isGrid,
-            pageKey,
-            setFilter,
-            tableRef,
-        ],
+        [customFilters, filter, gridRef, handleRefreshGrid, handleRefreshTable, isGrid, tableRef],
     );
 
-    // Check if genre filter has options to show
-    const hasGenreOptions = useMemo(() => {
+    const handleGenreChange = useCallback(
+        (genre: string | undefined) => {
+            setFilter({
+                customFilters,
+                data: { _custom: { ...filter._custom, genre } as any },
+                itemType: LibraryItem.ALBUM,
+                key: pageKey,
+            });
+
+            // When genre changes, clear styles as they need to be re-filtered
+            refreshWithFilters(genre, []);
+        },
+        [customFilters, filter._custom, pageKey, refreshWithFilters, setFilter],
+    );
+
+    const handleStylesChange = useCallback(
+        (styles: string[]) => {
+            setFilter({
+                customFilters,
+                data: { genres: styles.length > 0 ? styles : undefined },
+                itemType: LibraryItem.ALBUM,
+                key: pageKey,
+            });
+
+            refreshWithFilters(currentGenre, styles);
+        },
+        [customFilters, currentGenre, pageKey, refreshWithFilters, setFilter],
+    );
+
+    // Extract available genres for the genre dropdown
+    const availableGenres = useMemo(() => {
         const genreSet = new Set<string>();
         albums.forEach((album) => {
             album.genres?.forEach((genre) => {
                 genreSet.add(genre.name);
             });
         });
-        return genreSet.size > 0;
+        return genreSet;
     }, [albums]);
 
-    // We need to extend the AlbumListHeaderFilters to include our genre dropdown
-    // For now, we'll render the original component and inject our dropdown via CSS
+    // Check if we have any genres or styles available
+    const hasFilters = availableGenres.size > 0;
+
     return (
         <div style={{ position: 'relative' }}>
             <AlbumListHeaderFilters
@@ -101,14 +125,14 @@ export const YearAlbumListFilters = ({
                 itemCount={itemCount}
                 tableRef={tableRef}
             />
-            {hasGenreOptions && (
+            {hasFilters && (
                 <div
                     style={{
                         alignItems: 'center',
                         display: 'flex',
                         gap: '8px',
                         position: 'absolute',
-                        right: '80px', // Position between refresh and 3 dots button
+                        right: '160px', // Move further left to accommodate both dropdowns
                         top: '50%',
                         transform: 'translateY(-50%)',
                         zIndex: 10,
@@ -118,11 +142,18 @@ export const YearAlbumListFilters = ({
                         orientation="vertical"
                         style={{ height: '20px' }}
                     />
-                    <GenreFilterDropdown
-                        albums={albums}
+                    <GenreDropdown
+                        availableGenres={availableGenres}
                         onChange={handleGenreChange}
-                        placeholder={t('filter.genre', { postProcess: 'titleCase' })}
-                        value={filter.genres || []}
+                        placeholder="Any genre"
+                        value={currentGenre}
+                    />
+                    <StylesFilterDropdown
+                        albums={albums}
+                        onChange={handleStylesChange}
+                        placeholder="Styles"
+                        selectedGenre={currentGenre}
+                        value={currentStyles}
                     />
                 </div>
             )}
