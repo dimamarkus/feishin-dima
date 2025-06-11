@@ -12,7 +12,7 @@ import { VirtualTable } from '/@/renderer/components/virtual-table';
 import { useVirtualTable } from '/@/renderer/components/virtual-table/hooks/use-virtual-table';
 import { useListContext } from '/@/renderer/context/list-context';
 import { AppRoute } from '/@/renderer/router/routes';
-import { useCurrentServer } from '/@/renderer/store';
+import { useCurrentServer, useListStoreByKey } from '/@/renderer/store';
 import { LibraryItem } from '/@/shared/types/domain-types';
 
 interface YearsListTableViewProps {
@@ -23,18 +23,30 @@ interface YearsListTableViewProps {
 export const YearsListTableView = ({ itemCount, tableRef }: YearsListTableViewProps) => {
     const server = useCurrentServer();
     const { customFilters, pageKey } = useListContext();
+    const { filter } = useListStoreByKey({ key: pageKey });
     const navigate = useNavigate();
 
     // Get album counts for all years and filter out empty ones
     const { yearsWithAlbums } = useYearAlbumCounts(YEAR_PLAYLISTS);
 
+    // Apply type filter from store
+    const typeFilter = (filter._custom as any)?.typeFilter || 'all';
+    const filteredYears = useMemo(() => {
+        if (typeFilter === 'decades') {
+            return yearsWithAlbums.filter((year) => year.type === 'decade');
+        } else if (typeFilter === 'years') {
+            return yearsWithAlbums.filter((year) => year.type === 'year');
+        }
+        return yearsWithAlbums;
+    }, [yearsWithAlbums, typeFilter]);
+
     // Convert years with album counts to format expected by the table
     const tableData = useMemo(() => {
-        return yearsWithAlbums.map((year) => ({
+        return filteredYears.map((year) => ({
             ...year,
             name: year.displayName, // Map displayName to name for table display
         }));
-    }, [yearsWithAlbums]);
+    }, [filteredYears]);
 
     const tableProps = useVirtualTable({
         contextMenu: [], // No context menu for years for now
@@ -73,8 +85,8 @@ export const YearsListTableView = ({ itemCount, tableRef }: YearsListTableViewPr
     return (
         <VirtualGridAutoSizerContainer>
             <VirtualTable
-                // Key is used to force remount of table when display, rowHeight, or server changes
-                key={`years-table-${tableProps.rowHeight}-${server?.id}`}
+                // Key is used to force remount of table when display, rowHeight, server, or filter changes
+                key={`years-table-${tableProps.rowHeight}-${server?.id}-${typeFilter}`}
                 ref={tableRef}
                 rowData={tableData} // Provide static data directly
                 {...tableProps}

@@ -124,6 +124,25 @@ const ImageContainer = styled.div<{ $isFavorite?: boolean }>`
   `}
 `;
 
+const TypeBadge = styled.div<{ $type: 'decade' | 'year' }>`
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: ${({ $type }) =>
+        $type === 'decade' ? 'var(--primary-color)' : 'var(--accent-color)'};
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    opacity: 0.9;
+`;
+
 const Image = styled(SimpleImg)`
     width: 100%;
     max-width: 100%;
@@ -195,6 +214,8 @@ export const DefaultCard = ({
                 break;
         }
 
+        const isYearItem = controls.itemType === LibraryItem.GENRE && data?.type;
+
         return (
             <DefaultCardContainer
                 $itemGap={controls.itemGap}
@@ -203,6 +224,12 @@ export const DefaultCard = ({
             >
                 <InnerCardContainer>
                     <ImageContainer $isFavorite={data?.userFavorite}>
+                        {/* Type Badge for Years */}
+                        {isYearItem && (
+                            <TypeBadge $type={data.type}>
+                                {data.type === 'decade' ? 'Decade' : 'Year'}
+                            </TypeBadge>
+                        )}
                         {controls.itemType === LibraryItem.LABEL &&
                         data?.imageUrl === 'mosaic://label-albums' ? (
                             <LabelAlbumMosaic
@@ -236,7 +263,6 @@ export const DefaultCard = ({
                                 />
                             </Center>
                         )}
-
                         <GridCardControls
                             handleFavorite={controls.handleFavorite}
                             handlePlayQueueAdd={controls.handlePlayQueueAdd}
@@ -263,12 +289,12 @@ export const DefaultCard = ({
             key={`card-${columnIndex}-${listChildProps.index}`}
         >
             <InnerCardContainer>
-                <ImageContainer>
-                    <Skeleton
-                        radius="sm"
-                        visible
-                    />
-                </ImageContainer>
+                <Skeleton
+                    radius="sm"
+                    visible
+                >
+                    <ImageContainer />
+                </Skeleton>
                 <DetailContainer>
                     <Stack spacing="sm">
                         {(controls?.cardRows || []).map((row, index) => (

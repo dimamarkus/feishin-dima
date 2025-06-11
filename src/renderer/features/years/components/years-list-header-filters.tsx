@@ -16,6 +16,7 @@ import { useContainerQuery } from '/@/renderer/hooks';
 import { useListFilterRefresh } from '/@/renderer/hooks/use-list-filter-refresh';
 import { useListStoreActions, useListStoreByKey } from '/@/renderer/store';
 import { SortOrder } from '/@/shared/types/domain-types';
+import { LibraryItem, YearListQuery } from '/@/shared/types/domain-types';
 import { ListDisplayType, TableColumn } from '/@/shared/types/types';
 
 // Define year sort options
@@ -108,22 +109,15 @@ export const YearsListHeaderFilters = ({
     );
 
     const handleToggleSortOrder = useCallback(() => {
-        const currentSortOrder = (safeFilter as any)?.sortOrder;
-        const currentEnum =
-            currentSortOrder === 'asc'
-                ? SortOrder.ASC
-                : currentSortOrder === 'desc'
-                  ? SortOrder.DESC
-                  : SortOrder.ASC;
-        const newSortOrder = currentEnum === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC;
+        const newSortOrder = filter.sortOrder === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC;
 
         setFilter({
             customFilters,
             data: { sortOrder: newSortOrder },
-            itemType: 'year' as any,
+            itemType: LibraryItem.YEAR,
             key: pageKey,
         });
-    }, [customFilters, (safeFilter as any)?.sortOrder, pageKey, setFilter]);
+    }, [customFilters, filter.sortOrder, pageKey, setFilter]);
 
     const handleItemSize = (e: number) => {
         if (isGrid) {
@@ -138,9 +132,11 @@ export const YearsListHeaderFilters = ({
     };
 
     const handleSetViewType = useCallback(
-        (e: MouseEvent<HTMLButtonElement>) => {
-            if (!e.currentTarget?.value) return;
-            setDisplayType({ data: e.currentTarget.value as ListDisplayType, key: pageKey });
+        (e: any) => {
+            if (!e) return;
+
+            const view = e.currentTarget.value as ListDisplayType;
+            setDisplayType({ data: view, key: pageKey });
         },
         [pageKey, setDisplayType],
     );
@@ -179,6 +175,36 @@ export const YearsListHeaderFilters = ({
         return tableRef.current?.api.sizeColumnsToFit();
     };
 
+    // Type filter handling
+    const currentTypeFilter = (filter._custom as any)?.typeFilter || 'all';
+
+    const handleSetTypeFilter = useCallback(
+        (e: any) => {
+            if (!e) return;
+
+            const typeFilter = e.currentTarget.value;
+            setFilter({
+                customFilters,
+                data: {
+                    _custom: {
+                        ...filter._custom,
+                        typeFilter,
+                    },
+                },
+                itemType: LibraryItem.YEAR,
+                key: pageKey,
+            });
+        },
+        [customFilters, filter._custom, pageKey, setFilter],
+    );
+
+    const typeFilterLabel =
+        currentTypeFilter === 'decades'
+            ? 'Decades Only'
+            : currentTypeFilter === 'years'
+              ? 'Years Only'
+              : 'All Years';
+
     return (
         <Flex justify="space-between">
             <Group
@@ -194,32 +220,37 @@ export const YearsListHeaderFilters = ({
                             size="md"
                             variant="subtle"
                         >
-                            {sortByLabel}
+                            {typeFilterLabel}
                         </Button>
                     </DropdownMenu.Target>
                     <DropdownMenu.Dropdown>
-                        {YEAR_FILTERS.map((f) => (
-                            <DropdownMenu.Item
-                                $isActive={f.value === (safeFilter as any)?.sortBy}
-                                key={`filter-${f.name}`}
-                                onClick={handleSetSortBy}
-                                value={f.value}
-                            >
-                                {f.name}
-                            </DropdownMenu.Item>
-                        ))}
+                        <DropdownMenu.Item
+                            $isActive={currentTypeFilter === 'all'}
+                            onClick={handleSetTypeFilter}
+                            value="all"
+                        >
+                            All Years
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item
+                            $isActive={currentTypeFilter === 'decades'}
+                            onClick={handleSetTypeFilter}
+                            value="decades"
+                        >
+                            Decades Only
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item
+                            $isActive={currentTypeFilter === 'years'}
+                            onClick={handleSetTypeFilter}
+                            value="years"
+                        >
+                            Years Only
+                        </DropdownMenu.Item>
                     </DropdownMenu.Dropdown>
                 </DropdownMenu>
                 <Divider orientation="vertical" />
                 <OrderToggleButton
                     onToggle={handleToggleSortOrder}
-                    sortOrder={
-                        (safeFilter as any)?.sortOrder === 'asc'
-                            ? SortOrder.ASC
-                            : (safeFilter as any)?.sortOrder === 'desc'
-                              ? SortOrder.DESC
-                              : SortOrder.ASC
-                    }
+                    sortOrder={filter.sortOrder}
                 />
                 <Button
                     compact

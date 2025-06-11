@@ -69,7 +69,7 @@ export const YearsListContent = ({ itemCount }: YearsListContentProps) => {
     const server = useCurrentServer();
     const [searchTerm, setSearchTerm] = useState('');
     const { pageKey } = useListContext();
-    const { display } = useListStoreByKey({ key: pageKey });
+    const { display, filter } = useListStoreByKey({ key: pageKey });
 
     // Create refs for the header component
     const gridRef = useRef<null | VirtualInfiniteGridRef>(null);
@@ -98,8 +98,17 @@ export const YearsListContent = ({ itemCount }: YearsListContentProps) => {
         setSearchTerm(term);
     }, []);
 
+    // Apply type filter from store
+    const typeFilter = (filter._custom as any)?.typeFilter || 'all';
+    let filteredByType = yearsWithAlbums;
+    if (typeFilter === 'decades') {
+        filteredByType = yearsWithAlbums.filter((year) => year.type === 'decade');
+    } else if (typeFilter === 'years') {
+        filteredByType = yearsWithAlbums.filter((year) => year.type === 'year');
+    }
+
     // Filter years based on search term from the already filtered years with albums
-    const filteredYears = yearsWithAlbums.filter((year) =>
+    const filteredYears = filteredByType.filter((year) =>
         year.displayName.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
@@ -120,6 +129,14 @@ export const YearsListContent = ({ itemCount }: YearsListContentProps) => {
     }
 
     if (filteredYears.length === 0) {
+        const noResultsMessage = searchTerm
+            ? `No years found matching "${searchTerm}"`
+            : typeFilter === 'decades'
+              ? 'No decades available.'
+              : typeFilter === 'years'
+                ? 'No individual years available.'
+                : 'No years available.';
+
         return (
             <Container>
                 <YearsListHeader
@@ -128,9 +145,7 @@ export const YearsListContent = ({ itemCount }: YearsListContentProps) => {
                     onSearch={handleSearch}
                     tableRef={tableRef}
                 />
-                <div style={{ padding: '20px' }}>
-                    {searchTerm ? `No years found matching "${searchTerm}"` : 'No years available.'}
-                </div>
+                <div style={{ padding: '20px' }}>{noResultsMessage}</div>
             </Container>
         );
     }

@@ -28,7 +28,7 @@ export const YearsListGridView = ({ gridRef, itemCount }: YearsListGridViewProps
     const server = useCurrentServer();
     const handlePlayQueueAdd = usePlayQueueAdd();
     const { id, pageKey } = useListContext();
-    const { display, grid } = useListStoreByKey({ key: pageKey });
+    const { display, filter, grid } = useListStoreByKey({ key: pageKey });
     const { setGrid } = useListStoreActions();
 
     const [searchParams, setSearchParams] = useSearchParams();
@@ -37,6 +37,17 @@ export const YearsListGridView = ({ gridRef, itemCount }: YearsListGridViewProps
 
     // Get years with album counts
     const { isLoading, yearsWithAlbums } = useYearAlbumCounts(YEAR_PLAYLISTS);
+
+    // Apply type filter
+    const typeFilter = (filter._custom as any)?.typeFilter || 'all';
+    const filteredYears = useMemo(() => {
+        if (typeFilter === 'decades') {
+            return yearsWithAlbums.filter((year) => year.type === 'decade');
+        } else if (typeFilter === 'years') {
+            return yearsWithAlbums.filter((year) => year.type === 'year');
+        }
+        return yearsWithAlbums;
+    }, [yearsWithAlbums, typeFilter]);
 
     const cardRows = useMemo(() => {
         const rows = [YEAR_CARD_ROWS.name, YEAR_CARD_ROWS.albumCount];
@@ -62,34 +73,37 @@ export const YearsListGridView = ({ gridRef, itemCount }: YearsListGridViewProps
 
     const fetchInitialData = useCallback(() => {
         // Transform years to match the expected format
-        return yearsWithAlbums.map((year) => ({
+        return filteredYears.map((year) => ({
             ...year,
             id: year.id,
             imageUrl: 'mosaic://year-albums', // Use special URL for year mosaics
             itemType: LibraryItem.GENRE, // Use GENRE as placeholder
             name: year.displayName,
+            // Add type for visual badge
+            yearType: year.type,
         })) as any;
-    }, [yearsWithAlbums]);
+    }, [filteredYears]);
 
     const fetch = useCallback(
         async ({ skip, take }: { skip: number; take: number }) => {
             // Transform years and slice for pagination
-            const transformedYears = yearsWithAlbums.map((year) => ({
+            const transformedYears = filteredYears.map((year) => ({
                 ...year,
                 id: year.id,
                 imageUrl: 'mosaic://year-albums',
                 itemType: LibraryItem.GENRE,
                 name: year.displayName,
+                yearType: year.type,
             }));
 
             const items = transformedYears.slice(skip, skip + take);
             return {
                 items,
                 startIndex: skip,
-                totalRecordCount: yearsWithAlbums.length,
+                totalRecordCount: filteredYears.length,
             };
         },
-        [yearsWithAlbums],
+        [filteredYears],
     );
 
     const route = {
@@ -109,11 +123,11 @@ export const YearsListGridView = ({ gridRef, itemCount }: YearsListGridViewProps
                         handlePlayQueueAdd={handlePlayQueueAdd}
                         height={height}
                         initialScrollOffset={initialScrollOffset}
-                        itemCount={yearsWithAlbums.length}
+                        itemCount={filteredYears.length}
                         itemGap={grid?.itemGap ?? 10}
                         itemSize={grid?.itemSize || 200}
                         itemType={LibraryItem.GENRE}
-                        key={`years-list-${server?.id}-${display}`}
+                        key={`years-list-${server?.id}-${display}-${typeFilter}`}
                         loading={isLoading}
                         minimumBatchSize={40}
                         onScroll={handleGridScroll}
