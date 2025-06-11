@@ -23,6 +23,11 @@ html {
   font-size: var(--root-font-size);
 }
 
+/* Set default image fit to prevent layout shifts during hydration */
+:root {
+  --image-fit: cover;
+}
+
 @media only screen and (max-width: 639px) {
   body,
   html {

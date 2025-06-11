@@ -33,12 +33,12 @@ const AlbumCover = styled.div`
 const Image = styled(SimpleImg)`
     width: 100%;
     height: 100%;
-    object-fit: var(--image-fit);
+    object-fit: var(--image-fit, cover);
 
     img {
         width: 100%;
         height: 100%;
-        object-fit: var(--image-fit);
+        object-fit: var(--image-fit, cover);
     }
 `;
 

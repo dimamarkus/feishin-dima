@@ -3,7 +3,7 @@ import { ModuleRegistry } from '@ag-grid-community/core';
 import { InfiniteRowModelModule } from '@ag-grid-community/infinite-row-model';
 import { MantineProvider } from '@mantine/core';
 import isElectron from 'is-electron';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { initSimpleImg } from 'react-simple-img';
 
 import './styles/global.scss';
@@ -126,7 +126,8 @@ export const App = () => {
         root.style.setProperty('--primary-color', accent);
     }, [accent]);
 
-    useEffect(() => {
+    // Set initial CSS property synchronously before first render to prevent layout shifts
+    useLayoutEffect(() => {
         const root = document.documentElement;
         root.style.setProperty('--image-fit', nativeImageAspect ? 'contain' : 'cover');
     }, [nativeImageAspect]);
