@@ -13,3 +13,4 @@ export * from './mutations/delete-favorite-mutation';
 export * from './mutations/set-rating-mutation';
 export * from './queries/music-folders-query';
 export * from './utils';
+export * from './utils/performance-utils';

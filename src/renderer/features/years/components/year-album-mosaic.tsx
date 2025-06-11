@@ -38,13 +38,13 @@ const MosaicItem = styled.div`
 const Image = styled(SimpleImg)`
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: var(--image-fit);
     display: block;
 
     img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: var(--image-fit);
         display: block;
     }
 `;
@@ -65,8 +65,10 @@ export const YearAlbumMosaic = ({ size = 200, yearPlaylist }: YearAlbumMosaicPro
     // Create album query filters based on year/decade
     const albumQuery = useAlbumList({
         options: {
+            cacheTime: 1000 * 60 * 60, // 1 hour cache
             enabled: Boolean(server),
-            staleTime: 1000 * 60 * 5, // 5 minutes
+            refetchOnWindowFocus: false, // Don't refetch on focus
+            staleTime: 1000 * 60 * 30, // 30 minutes - longer for cover art data
         },
         query: {
             limit: 20, // Get more albums to have a better selection of covers

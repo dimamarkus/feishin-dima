@@ -140,7 +140,7 @@ export const VirtualInfiniteGrid = forwardRef(
             [columnCount, fetchFn, itemCount],
         );
 
-        const debouncedLoadMoreItems = debounce(loadMoreItems, 500);
+        const debouncedLoadMoreItems = debounce(loadMoreItems, 200);
 
         useImperativeHandle(ref, () => ({
             resetLoadMoreItemsCache: () => {
@@ -172,7 +172,7 @@ export const VirtualInfiniteGrid = forwardRef(
                     loadMoreItems={debouncedLoadMoreItems}
                     minimumBatchSize={minimumBatchSize}
                     ref={loader}
-                    threshold={30}
+                    threshold={15}
                 >
                     {({ onItemsRendered, ref: infiniteLoaderRef }) => (
                         <VirtualGridWrapper

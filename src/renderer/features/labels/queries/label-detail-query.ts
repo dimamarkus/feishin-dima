@@ -19,7 +19,7 @@ export const useLabelDetail = (args: UseLabelDetailArgs) => {
     const server = useCurrentServer();
 
     return useQuery({
-        cacheTime: options?.cacheTime,
+        cacheTime: options?.cacheTime || 1000 * 60 * 60, // Default 1 hour cache
         enabled: Boolean(server && serverId && labelId && options?.enabled !== false),
         queryFn: ({ signal }) => {
             if (!server) throw new Error('Server not available');
@@ -30,6 +30,7 @@ export const useLabelDetail = (args: UseLabelDetailArgs) => {
             });
         },
         queryKey: ['labels', 'detail', serverId, labelId],
-        staleTime: options?.staleTime,
+        refetchOnWindowFocus: false, // Don't refetch on focus
+        staleTime: options?.staleTime || 1000 * 60 * 15, // Default 15 minutes stale time
     });
 };

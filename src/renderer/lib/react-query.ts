@@ -22,13 +22,13 @@ const queryConfig: DefaultOptions = {
         retry: process.env.NODE_ENV === 'production',
     },
     queries: {
-        cacheTime: 1000 * 60 * 3,
+        cacheTime: 1000 * 60 * 10, // Increased from 3 to 10 minutes
         onError: (err) => {
             console.error('react query error:', err);
         },
         refetchOnWindowFocus: false,
         retry: process.env.NODE_ENV === 'production',
-        staleTime: 1000 * 5,
+        staleTime: 1000 * 30, // Increased from 5 to 30 seconds
         useErrorBoundary: (error: any) => {
             return error?.response?.status >= 500;
         },

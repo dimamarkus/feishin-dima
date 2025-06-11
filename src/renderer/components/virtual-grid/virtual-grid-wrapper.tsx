@@ -120,7 +120,7 @@ export const VirtualGridWrapper = ({
             itemData={memoizedItemData}
             itemSize={itemHeight}
             onScroll={memoizedOnScroll}
-            overscanCount={5}
+            overscanCount={10}
             width={(width && Number(width)) || 0}
         >
             {GridCard}

@@ -18,7 +18,7 @@ export const useLabelList = (args: UseLabelListArgs) => {
     const server = useCurrentServer();
 
     return useQuery({
-        cacheTime: options?.cacheTime,
+        cacheTime: options?.cacheTime || 1000 * 60 * 60, // Default 1 hour cache
         enabled: Boolean(server && options?.enabled !== false),
         queryFn: ({ signal }) => {
             if (!server) throw new Error('Server not available');
@@ -40,8 +40,9 @@ export const useLabelList = (args: UseLabelListArgs) => {
             return promise;
         },
         queryKey: ['labels', 'list', server?.id || 'no-server', query],
+        refetchOnWindowFocus: false, // Don't refetch on focus for performance
         retry: 2, // Retry failed queries up to 2 times
         retryDelay: 1000, // Wait 1 second between retries
-        staleTime: options?.staleTime,
+        staleTime: options?.staleTime || 1000 * 60 * 15, // Default 15 minutes stale time
     });
 };

@@ -108,6 +108,7 @@ export const LabelListGridView = ({ gridRef, itemCount }: LabelListGridViewProps
             const queryKey = queryKeys.labels.list(server?.id || '', query);
 
             const labels = await queryClient.fetchQuery({
+                cacheTime: 1000 * 60 * 60, // 1 hour
                 queryFn: async ({ signal }) => {
                     return VirtualLabelAPI.getLabelList({
                         apiClientProps: {
@@ -118,6 +119,7 @@ export const LabelListGridView = ({ gridRef, itemCount }: LabelListGridViewProps
                     });
                 },
                 queryKey,
+                staleTime: 1000 * 60 * 15, // 15 minutes
             });
 
             return labels;
