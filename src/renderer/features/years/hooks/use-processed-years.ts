@@ -31,9 +31,8 @@ export const useProcessedYears = (searchTerm = ''): ProcessedYearsResult => {
     // Try optimized data fetching first
     const optimizedResult = useOptimizedYearAlbumCounts(YEAR_PLAYLISTS);
 
-    // Fallback to original hook if optimized returns no results and is not loading
-    const shouldUseFallback =
-        !optimizedResult.isLoading && optimizedResult.yearsWithAlbums.length === 0;
+    // Temporarily force fallback to debug the optimized version
+    const shouldUseFallback = true; // !optimizedResult.isLoading && optimizedResult.yearsWithAlbums.length === 0;
     const fallbackResult = useYearAlbumCounts(YEAR_PLAYLISTS);
 
     // Choose which result to use
@@ -45,13 +44,6 @@ export const useProcessedYears = (searchTerm = ''): ProcessedYearsResult => {
               yearsWithAlbums: fallbackResult.yearsWithAlbums,
           }
         : optimizedResult;
-
-    console.log('🔍 useProcessedYears - Using fallback:', shouldUseFallback, {
-        fallbackCount: fallbackResult.yearsWithAlbums.length,
-        fallbackLoading: fallbackResult.isLoading,
-        optimizedCount: optimizedResult.yearsWithAlbums.length,
-        optimizedLoading: optimizedResult.isLoading,
-    });
 
     // Extract filter values with defaults
     const typeFilter = ((filter as any)?._custom as any)?.typeFilter || 'all';

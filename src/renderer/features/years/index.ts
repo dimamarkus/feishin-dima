@@ -7,6 +7,7 @@ export { YearsDecadeRoute } from './components/years-decade-route';
 export { YearsListContent } from './components/years-list-content';
 export { YearsListGridView } from './components/years-list-grid-view';
 export { YearsListHeaderFilters } from './components/years-list-header-filters';
+export { default as YearsListRoute } from './components/years-list-route';
 export { YearsListTableView } from './components/years-list-table-view';
 export { YearsPlaylistRoute } from './components/years-playlist-route';
 

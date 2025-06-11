@@ -1,10 +1,11 @@
-import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { useProcessedYears } from '../hooks/use-processed-years';
 import { YearPlaylist } from '../years-playlists';
 import { YearAlbumMosaic } from './year-album-mosaic';
+import { YearsListGridView } from './years-list-grid-view';
 import { YearsListHeader } from './years-list-header';
 import { YearsListTableView } from './years-list-table-view';
 
@@ -16,12 +17,6 @@ import { AppRoute } from '/@/renderer/router/routes';
 import { useCurrentServer, useListStoreByKey } from '/@/renderer/store';
 import { LibraryItem, SortOrder } from '/@/shared/types/domain-types';
 import { ListDisplayType } from '/@/shared/types/types';
-
-const YearsListGridView = lazy(() =>
-    import('/@/renderer/features/years/components/years-list-grid-view').then((module) => ({
-        default: module.YearsListGridView,
-    })),
-);
 
 type YearsListContentProps = {
     itemCount?: number;
@@ -169,21 +164,19 @@ export const YearsListContent = ({ itemCount }: YearsListContentProps) => {
                 onSearch={handleSearch}
                 tableRef={tableRef}
             />
-            <Suspense fallback={<Spinner container />}>
-                {isTableView ? (
-                    <YearsListTableView
-                        itemCount={sortedFilteredYears.length}
-                        searchTerm={searchTerm}
-                        tableRef={tableRef}
-                    />
-                ) : (
-                    <YearsListGridView
-                        gridRef={gridRef}
-                        itemCount={sortedFilteredYears.length}
-                        searchTerm={searchTerm}
-                    />
-                )}
-            </Suspense>
+            {isTableView ? (
+                <YearsListTableView
+                    itemCount={sortedFilteredYears.length}
+                    searchTerm={searchTerm}
+                    tableRef={tableRef}
+                />
+            ) : (
+                <YearsListGridView
+                    gridRef={gridRef}
+                    itemCount={sortedFilteredYears.length}
+                    searchTerm={searchTerm}
+                />
+            )}
         </Container>
     );
 };

@@ -44,35 +44,11 @@ export const useOptimizedYearAlbumCounts = (years: YearPlaylist[]) => {
         serverId: server?.id,
     });
 
-    // Debug logging
-    console.log('🔍 Debug - useOptimizedYearAlbumCounts:', {
-        albumCount: allAlbumsQuery.data?.items?.length || 0,
-        error: allAlbumsQuery.error,
-        isError: allAlbumsQuery.isError,
-        isLoading: allAlbumsQuery.isLoading,
-        queryParams: {
-            limit: 5000,
-            maxYear: currentYear + 1,
-            minYear: 1950,
-            sortBy: AlbumListSort.YEAR,
-            sortOrder: SortOrder.ASC,
-        },
-        sampleAlbums:
-            allAlbumsQuery.data?.items
-                ?.slice(0, 3)
-                .map((a) => ({ name: a.name, releaseYear: a.releaseYear })) || [],
-        server: server?.id,
-        totalRecordCount: allAlbumsQuery.data?.totalRecordCount,
-        yearCount: years.length,
-    });
-
-    // Process albums to generate year counts
+    // Process albums to generate year counts - memoized with stable dependencies
     const { albumsByYear, yearCounts } = useMemo(() => {
         const albums = allAlbumsQuery.data?.items || [];
         const counts: YearAlbumCounts = {};
         const albumsMap: { [yearId: string]: Album[] } = {};
-
-        console.log('🔍 Processing albums:', albums.length);
 
         // Initialize all years with 0 count
         years.forEach((year) => {
@@ -83,7 +59,6 @@ export const useOptimizedYearAlbumCounts = (years: YearPlaylist[]) => {
         // Process each album and assign to appropriate years/decades
         albums.forEach((album) => {
             if (!album.releaseYear) {
-                console.log('⚠️ Album without releaseYear:', album.name);
                 return;
             }
 
@@ -116,10 +91,6 @@ export const useOptimizedYearAlbumCounts = (years: YearPlaylist[]) => {
             counts[yearId].albums = albumsMap[yearId];
         });
 
-        // Debug year counts
-        const nonZeroCounts = Object.entries(counts).filter(([_, data]) => data.count > 0);
-        console.log('🔍 Year counts (non-zero):', nonZeroCounts.slice(0, 10));
-
         return { albumsByYear: albumsMap, yearCounts: counts };
     }, [allAlbumsQuery.data?.items, years]);
 
@@ -139,12 +110,6 @@ export const useOptimizedYearAlbumCounts = (years: YearPlaylist[]) => {
             // Filter out years with 0 albums
             return year.albumCount > 0;
         });
-
-        console.log('🔍 Years with albums:', filtered.length, 'out of', yearsWithCounts.length);
-        console.log(
-            '🔍 Sample years with albums:',
-            filtered.slice(0, 5).map((y) => ({ count: y.albumCount, name: y.displayName })),
-        );
 
         return filtered;
     }, [yearsWithCounts]);
