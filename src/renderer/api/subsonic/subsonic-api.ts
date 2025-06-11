@@ -7,6 +7,7 @@ import { z } from 'zod';
 import i18n from '/@/i18n/i18n';
 import { toast } from '/@/renderer/components/toast/index';
 import { ssType } from '/@/shared/api/subsonic/subsonic-types';
+import { CLIENT_IDENTIFIERS } from '/@/shared/constants';
 import { ServerListItem } from '/@/shared/types/domain-types';
 
 const c = initContract();
@@ -323,7 +324,7 @@ export const ssApiClient = (args: {
                     headers,
                     method: method as Method,
                     params: {
-                        c: 'Feishin',
+                        c: CLIENT_IDENTIFIERS.SUBSONIC,
                         f: 'json',
                         v: '1.13.0',
                         ...authParams,

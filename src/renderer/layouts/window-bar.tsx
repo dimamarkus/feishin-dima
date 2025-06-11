@@ -11,8 +11,10 @@ import macMax from './assets/max-mac.png';
 import macMinHover from './assets/min-mac-hover.png';
 import macMin from './assets/min-mac.png';
 
+import { getCombinedTitle } from '/@/renderer/hooks/use-page-title';
 import { useCurrentStatus, useQueueStatus } from '/@/renderer/store';
 import { useWindowSettings } from '/@/renderer/store/settings.store';
+import { APP_NAME } from '/@/shared/constants';
 import { Platform, PlayerStatus } from '/@/shared/types/types';
 
 const localSettings = isElectron() ? window.api.localSettings : null;
@@ -225,12 +227,15 @@ export const WindowBar = () => {
 
     const statusString = playerStatus === PlayerStatus.PAUSED ? '(Paused) ' : '';
     const queueString = length ? `(${index + 1} / ${length}) ` : '';
-    const title = length
+    const playerTitle = length
         ? currentSong?.artistName
             ? `${statusString}${queueString}${currentSong?.name} — ${currentSong?.artistName}`
             : `${statusString}${queueString}${currentSong?.name}`
-        : 'Feishin';
-    document.title = title;
+        : APP_NAME;
+
+    // Use the combined title that respects page-specific titles (for display in window bar)
+    const title = getCombinedTitle(playerTitle);
+    // Note: document.title is now managed by TitleManager component
 
     const [max, setMax] = useState(localSettings?.env.START_MAXIMIZED || false);
 

@@ -4,6 +4,7 @@ import { lazy } from 'react';
 import { useNavigate } from 'react-router';
 import styled from 'styled-components';
 
+import { TitleManager } from '/@/renderer/components/title-manager';
 import { CommandPalette } from '/@/renderer/features/search/components/command-palette';
 import { MainContent } from '/@/renderer/layouts/default-layout/main-content';
 import { PlayerBar } from '/@/renderer/layouts/default-layout/player-bar';
@@ -88,6 +89,7 @@ export const DefaultLayout = ({ shell }: DefaultLayoutProps) => {
 
     return (
         <>
+            <TitleManager />
             <Layout
                 $windowBarStyle={windowBarStyle}
                 id="default-layout"

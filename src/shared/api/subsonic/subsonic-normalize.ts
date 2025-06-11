@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
 import { ssType } from '/@/shared/api/subsonic/subsonic-types';
+import { CLIENT_IDENTIFIERS } from '/@/shared/constants';
 import {
     Album,
     AlbumArtist,
@@ -31,7 +32,7 @@ const getCoverArtUrl = (args: {
         `?id=${args.coverArtId}` +
         `&${args.credential}` +
         '&v=1.13.0' +
-        '&c=Feishin' +
+        `&c=${CLIENT_IDENTIFIERS.SUBSONIC}` +
         `&size=${size}`
     );
 };
@@ -135,7 +136,7 @@ const normalizeSong = (
             size: size || 300,
         }) || null;
 
-    const streamUrl = `${server?.url}/rest/stream.view?id=${item.id}&v=1.13.0&c=Feishin&${server?.credential}`;
+    const streamUrl = `${server?.url}/rest/stream.view?id=${item.id}&v=1.13.0&c=${CLIENT_IDENTIFIERS.SUBSONIC}&${server?.credential}`;
 
     return {
         album: item.album || '',

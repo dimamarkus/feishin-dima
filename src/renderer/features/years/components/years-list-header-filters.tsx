@@ -227,7 +227,7 @@ export const YearsListHeaderFilters = ({
                             onClick={handleSetTypeFilter}
                             value="all"
                         >
-                            All Years
+                            All
                         </DropdownMenu.Item>
                         <DropdownMenu.Item
                             $isActive={currentTypeFilter === 'decades'}
