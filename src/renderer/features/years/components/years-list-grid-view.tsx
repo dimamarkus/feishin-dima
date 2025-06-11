@@ -3,8 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import AutoSizer, { Size } from 'react-virtualized-auto-sizer';
 import { ListOnScrollProps } from 'react-window';
 
-import { useYearAlbumCounts } from '../hooks/use-year-album-counts';
-import { YEAR_PLAYLISTS } from '../years-playlists';
+import { useProcessedYears } from '../hooks/use-processed-years';
 
 import { YEAR_CARD_ROWS } from '/@/renderer/components/card/card-rows';
 import {
@@ -16,79 +15,32 @@ import { useListContext } from '/@/renderer/context/list-context';
 import { usePlayQueueAdd } from '/@/renderer/features/player';
 import { AppRoute } from '/@/renderer/router/routes';
 import { useCurrentServer, useListStoreActions, useListStoreByKey } from '/@/renderer/store';
-import { LibraryItem, SortOrder } from '/@/shared/types/domain-types';
+import { LibraryItem } from '/@/shared/types/domain-types';
 import { ListDisplayType } from '/@/shared/types/types';
 
 interface YearsListGridViewProps {
     gridRef: React.MutableRefObject<null | VirtualInfiniteGridRef>;
     itemCount?: number;
+    searchTerm?: string;
 }
 
-export const YearsListGridView = ({ gridRef, itemCount }: YearsListGridViewProps) => {
+export const YearsListGridView = ({
+    gridRef,
+    itemCount,
+    searchTerm = '',
+}: YearsListGridViewProps) => {
     const server = useCurrentServer();
     const handlePlayQueueAdd = usePlayQueueAdd();
     const { id, pageKey } = useListContext();
-    const { display, filter, grid } = useListStoreByKey({ key: pageKey });
+    const { display, grid } = useListStoreByKey({ key: pageKey });
     const { setGrid } = useListStoreActions();
 
     const [searchParams, setSearchParams] = useSearchParams();
     const scrollOffset = searchParams.get('scrollOffset');
     const initialScrollOffset = Number(id ? scrollOffset : grid?.scrollOffset) || 0;
 
-    // Get years with album counts
-    const { isLoading, yearsWithAlbums } = useYearAlbumCounts(YEAR_PLAYLISTS);
-
-    // Apply type filter
-    const typeFilter = ((filter as any)?._custom as any)?.typeFilter || 'all';
-    const filteredYears = useMemo(() => {
-        if (typeFilter === 'decades') {
-            return yearsWithAlbums.filter((year) => year.type === 'decade');
-        } else if (typeFilter === 'years') {
-            return yearsWithAlbums.filter((year) => year.type === 'year');
-        }
-        return yearsWithAlbums;
-    }, [yearsWithAlbums, typeFilter]);
-
-    // Apply sorting
-    const sortBy = (filter as any)?.sortBy || 'year';
-    const sortOrderValue = (filter as any)?.sortOrder || SortOrder.DESC;
-
-    // Ensure sortOrder is properly converted to enum value
-    const sortOrder =
-        sortOrderValue === SortOrder.ASC || sortOrderValue === 'asc'
-            ? SortOrder.ASC
-            : SortOrder.DESC;
-
-    const sortedAndFilteredYears = useMemo(() => {
-        const sorted = [...filteredYears].sort((a, b) => {
-            let aValue, bValue;
-
-            switch (sortBy) {
-                case 'albumCount':
-                    aValue = a.albumCount || 0;
-                    bValue = b.albumCount || 0;
-                    break;
-                case 'year':
-                default:
-                    // For decades, use the start year (e.g., 1980 for "1980s")
-                    aValue =
-                        a.type === 'decade' ? parseInt(a.displayName) : parseInt(a.displayName);
-                    bValue =
-                        b.type === 'decade' ? parseInt(b.displayName) : parseInt(b.displayName);
-                    break;
-            }
-
-            if (aValue < bValue) {
-                return sortOrder === SortOrder.ASC ? -1 : 1;
-            }
-            if (aValue > bValue) {
-                return sortOrder === SortOrder.ASC ? 1 : -1;
-            }
-            return 0;
-        });
-
-        return sorted;
-    }, [filteredYears, sortBy, sortOrder]);
+    // Use centralized processing hook - single source of truth
+    const { getAlbumsForYear, isLoading, sortedFilteredYears } = useProcessedYears(searchTerm);
 
     const cardRows = useMemo(() => {
         const rows = [YEAR_CARD_ROWS.name, YEAR_CARD_ROWS.albumCount];
@@ -113,26 +65,29 @@ export const YearsListGridView = ({ gridRef, itemCount }: YearsListGridViewProps
     );
 
     const fetchInitialData = useCallback(() => {
-        // Transform years to match the expected format
-        return sortedAndFilteredYears.map((year) => ({
+        // Transform years to match the expected format with pre-fetched album data
+        return sortedFilteredYears.map((year) => ({
             ...year,
             id: year.id,
             imageUrl: 'mosaic://year-albums', // Use special URL for year mosaics
             itemType: LibraryItem.GENRE, // Use GENRE as placeholder
+            // Pre-fetch albums for mosaic - this eliminates individual API calls
+            mosaicAlbums: getAlbumsForYear(year.id, 4),
             name: year.displayName,
             // Add type for visual badge
             yearType: year.type,
         })) as any;
-    }, [sortedAndFilteredYears]);
+    }, [sortedFilteredYears, getAlbumsForYear]);
 
     const fetch = useCallback(
         async ({ skip, take }: { skip: number; take: number }) => {
             // Transform years and slice for pagination
-            const transformedYears = sortedAndFilteredYears.map((year) => ({
+            const transformedYears = sortedFilteredYears.map((year) => ({
                 ...year,
                 id: year.id,
                 imageUrl: 'mosaic://year-albums',
                 itemType: LibraryItem.GENRE,
+                mosaicAlbums: getAlbumsForYear(year.id, 4),
                 name: year.displayName,
                 yearType: year.type,
             }));
@@ -141,16 +96,21 @@ export const YearsListGridView = ({ gridRef, itemCount }: YearsListGridViewProps
             return {
                 items,
                 startIndex: skip,
-                totalRecordCount: sortedAndFilteredYears.length,
+                totalRecordCount: sortedFilteredYears.length,
             };
         },
-        [sortedAndFilteredYears],
+        [sortedFilteredYears, getAlbumsForYear],
     );
 
     const route = {
         route: AppRoute.LIBRARY_YEARS_DETAIL,
         slugs: [{ idProperty: 'displayName', slugProperty: 'yearId' }],
     };
+
+    // Optimized cache key - only changes when actual data changes
+    const cacheKey = useMemo(() => {
+        return `years-list-${server?.id}-${display}-${sortedFilteredYears.length}-${searchTerm}`;
+    }, [server?.id, display, sortedFilteredYears.length, searchTerm]);
 
     return (
         <VirtualGridAutoSizerContainer>
@@ -164,11 +124,11 @@ export const YearsListGridView = ({ gridRef, itemCount }: YearsListGridViewProps
                         handlePlayQueueAdd={handlePlayQueueAdd}
                         height={height}
                         initialScrollOffset={initialScrollOffset}
-                        itemCount={sortedAndFilteredYears.length}
+                        itemCount={sortedFilteredYears.length}
                         itemGap={grid?.itemGap ?? 10}
                         itemSize={grid?.itemSize || 200}
                         itemType={LibraryItem.GENRE}
-                        key={`years-list-${server?.id}-${display}-${typeFilter}-${sortBy}-${sortOrder}`}
+                        key={cacheKey}
                         loading={isLoading}
                         minimumBatchSize={40}
                         onScroll={handleGridScroll}
