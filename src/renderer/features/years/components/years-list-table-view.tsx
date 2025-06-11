@@ -4,6 +4,7 @@ import { RowDoubleClickedEvent } from '@ag-grid-community/core';
 import { MutableRefObject, useCallback, useMemo } from 'react';
 import { generatePath, useNavigate } from 'react-router';
 
+import { useYearAlbumCounts } from '../hooks/use-year-album-counts';
 import { YEAR_PLAYLISTS, YearPlaylist } from '../years-playlists';
 
 import { VirtualGridAutoSizerContainer } from '/@/renderer/components/virtual-grid';
@@ -24,13 +25,16 @@ export const YearsListTableView = ({ itemCount, tableRef }: YearsListTableViewPr
     const { customFilters, pageKey } = useListContext();
     const navigate = useNavigate();
 
-    // Convert YEAR_PLAYLISTS to format expected by the table
+    // Get album counts for all years and filter out empty ones
+    const { yearsWithAlbums } = useYearAlbumCounts(YEAR_PLAYLISTS);
+
+    // Convert years with album counts to format expected by the table
     const tableData = useMemo(() => {
-        return YEAR_PLAYLISTS.map((year) => ({
+        return yearsWithAlbums.map((year) => ({
             ...year,
             name: year.displayName, // Map displayName to name for table display
         }));
-    }, []);
+    }, [yearsWithAlbums]);
 
     const tableProps = useVirtualTable({
         contextMenu: [], // No context menu for years for now

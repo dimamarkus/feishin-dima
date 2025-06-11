@@ -9,4 +9,5 @@ export { default as YearsListRoute } from './components/years-list-route';
 export { YearsListTableView } from './components/years-list-table-view';
 export { YearsOverviewRoute } from './components/years-overview-route';
 export { YearsPlaylistRoute } from './components/years-playlist-route';
+export { useYearAlbumCounts } from './hooks/use-year-album-counts';
 export * from './years-playlists';

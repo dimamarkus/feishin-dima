@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { useYearAlbumCounts } from '../hooks/use-year-album-counts';
 import { YEAR_PLAYLISTS, YearPlaylist } from '../years-playlists';
 import { YearAlbumMosaic } from './year-album-mosaic';
 import { YearsListHeader } from './years-list-header';
@@ -67,6 +68,9 @@ export const YearsListContent = ({ itemCount }: YearsListContentProps) => {
     const gridRef = useRef<null | VirtualInfiniteGridRef>(null);
     const tableRef = useRef<any>(null);
 
+    // Get album counts for all years and filter out empty ones
+    const { isLoading: countsLoading, yearsWithAlbums } = useYearAlbumCounts(YEAR_PLAYLISTS);
+
     const safeDisplay = display || ListDisplayType.CARD;
     const isTableView =
         safeDisplay === ListDisplayType.TABLE || safeDisplay === ListDisplayType.TABLE_PAGINATED;
@@ -87,8 +91,8 @@ export const YearsListContent = ({ itemCount }: YearsListContentProps) => {
         setSearchTerm(term);
     }, []);
 
-    // Filter years based on search term
-    const filteredYears = YEAR_PLAYLISTS.filter((year) =>
+    // Filter years based on search term from the already filtered years with albums
+    const filteredYears = yearsWithAlbums.filter((year) =>
         year.displayName.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
@@ -168,6 +172,8 @@ export const YearsListContent = ({ itemCount }: YearsListContentProps) => {
                                     }}
                                 >
                                     {year.type === 'decade' ? 'Decade' : 'Year'}
+                                    {(year as any).albumCount !== undefined &&
+                                        ` • ${(year as any).albumCount} albums`}
                                 </Text>
                             </YearInfo>
                         </YearCard>
