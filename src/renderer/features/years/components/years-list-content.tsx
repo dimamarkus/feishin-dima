@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -14,6 +14,7 @@ import { VirtualInfiniteGridRef } from '/@/renderer/components/virtual-grid';
 import { useListContext } from '/@/renderer/context/list-context';
 import { AppRoute } from '/@/renderer/router/routes';
 import { useCurrentServer, useListStoreByKey } from '/@/renderer/store';
+import { LibraryItem, SortOrder } from '/@/shared/types/domain-types';
 import { ListDisplayType } from '/@/shared/types/types';
 
 const YearsListGridView = lazy(() =>
@@ -68,8 +69,11 @@ export const YearsListContent = ({ itemCount }: YearsListContentProps) => {
     const navigate = useNavigate();
     const server = useCurrentServer();
     const [searchTerm, setSearchTerm] = useState('');
-    const { pageKey } = useListContext();
-    const { display, filter } = useListStoreByKey({ key: pageKey });
+    const { customFilters, pageKey } = useListContext();
+    const { display, filter } = useListStoreByKey<any>({
+        filter: customFilters,
+        key: pageKey,
+    });
 
     // Create refs for the header component
     const gridRef = useRef<null | VirtualInfiniteGridRef>(null);
@@ -98,6 +102,20 @@ export const YearsListContent = ({ itemCount }: YearsListContentProps) => {
         setSearchTerm(term);
     }, []);
 
+    const cacheKey = useMemo(() => {
+        const typeFilter = ((filter as any)?._custom as any)?.typeFilter || 'all';
+        const sortBy = (filter as any)?.sortBy || 'year';
+        const sortOrderValue = (filter as any)?.sortOrder || SortOrder.DESC;
+
+        // Ensure sortOrder is properly converted to enum value
+        const sortOrder =
+            sortOrderValue === SortOrder.ASC || sortOrderValue === 'asc'
+                ? SortOrder.ASC
+                : SortOrder.DESC;
+
+        return ['years', server?.id, typeFilter, sortBy, sortOrder].join('|');
+    }, [filter, server?.id]);
+
     // Apply type filter from store
     const typeFilter = (filter._custom as any)?.typeFilter || 'all';
     let filteredByType = yearsWithAlbums;
@@ -107,8 +125,42 @@ export const YearsListContent = ({ itemCount }: YearsListContentProps) => {
         filteredByType = yearsWithAlbums.filter((year) => year.type === 'year');
     }
 
-    // Filter years based on search term from the already filtered years with albums
-    const filteredYears = filteredByType.filter((year) =>
+    // Apply sorting
+    const sortBy = (filter as any)?.sortBy || 'year';
+    const sortOrder = (filter as any)?.sortOrder || 'desc';
+    const sortedFilteredYears = useMemo(() => {
+        const sorted = [...filteredByType].sort((a, b) => {
+            let aValue, bValue;
+
+            switch (sortBy) {
+                case 'albumCount':
+                    aValue = a.albumCount || 0;
+                    bValue = b.albumCount || 0;
+                    break;
+                case 'year':
+                default:
+                    // For decades, use the start year (e.g., 1980 for "1980s")
+                    aValue =
+                        a.type === 'decade' ? parseInt(a.displayName) : parseInt(a.displayName);
+                    bValue =
+                        b.type === 'decade' ? parseInt(b.displayName) : parseInt(b.displayName);
+                    break;
+            }
+
+            if (aValue < bValue) {
+                return sortOrder === 'asc' ? -1 : 1;
+            }
+            if (aValue > bValue) {
+                return sortOrder === 'asc' ? 1 : -1;
+            }
+            return 0;
+        });
+
+        return sorted;
+    }, [filteredByType, sortBy, sortOrder]);
+
+    // Filter years based on search term from the already sorted and filtered years
+    const filteredYears = sortedFilteredYears.filter((year) =>
         year.displayName.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 

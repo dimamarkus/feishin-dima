@@ -1,11 +1,9 @@
 import type { AgGridReact as AgGridReactType } from '@ag-grid-community/react/lib/agGridReact';
 
 import { Divider, Flex, Group, Slider, Stack, Switch } from '@mantine/core';
-import { ChangeEvent, MouseEvent, MutableRefObject, useCallback } from 'react';
+import { ChangeEvent, MutableRefObject, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RiMoreFill, RiRefreshLine, RiSettings3Fill } from 'react-icons/ri';
-
-import { YEAR_PLAYLISTS } from '../years-playlists';
 
 import i18n from '/@/i18n/i18n';
 import { Button, DropdownMenu, MultiSelect, Text } from '/@/renderer/components';
@@ -13,28 +11,21 @@ import { VirtualInfiniteGridRef } from '/@/renderer/components/virtual-grid';
 import { useListContext } from '/@/renderer/context/list-context';
 import { OrderToggleButton } from '/@/renderer/features/shared';
 import { useContainerQuery } from '/@/renderer/hooks';
-import { useListFilterRefresh } from '/@/renderer/hooks/use-list-filter-refresh';
 import { useListStoreActions, useListStoreByKey } from '/@/renderer/store';
-import { SortOrder } from '/@/shared/types/domain-types';
-import { LibraryItem, YearListQuery } from '/@/shared/types/domain-types';
+import { LibraryItem, SortOrder } from '/@/shared/types/domain-types';
 import { ListDisplayType, TableColumn } from '/@/shared/types/types';
 
 // Define year sort options
 const YEAR_FILTERS = [
     {
-        defaultOrder: SortOrder.ASC,
-        name: i18n.t('filter.name', { postProcess: 'titleCase' }),
-        value: 'name',
-    },
-    {
         defaultOrder: SortOrder.DESC,
-        name: i18n.t('filter.year', { postProcess: 'titleCase' }),
+        name: 'Year',
         value: 'year',
     },
     {
-        defaultOrder: SortOrder.ASC,
-        name: i18n.t('filter.type', { postProcess: 'titleCase' }),
-        value: 'type',
+        defaultOrder: SortOrder.DESC,
+        name: 'Album Count',
+        value: 'albumCount',
     },
 ];
 
@@ -78,7 +69,7 @@ export const YearsListHeaderFilters = ({
     const safeDisplay = display || 'card';
 
     const sortByLabel =
-        YEAR_FILTERS.find((f) => f.value === (safeFilter as any)?.sortBy)?.name || 'Name';
+        YEAR_FILTERS.find((f) => f.value === (filter as any)?.sortBy)?.name || 'Year';
 
     const isGrid = safeDisplay === ListDisplayType.CARD || safeDisplay === ListDisplayType.POSTER;
 
@@ -88,20 +79,19 @@ export const YearsListHeaderFilters = ({
     }, []);
 
     const handleSetSortBy = useCallback(
-        (e: MouseEvent<HTMLButtonElement>) => {
-            if (!e.currentTarget?.value) return;
+        (e: any) => {
+            if (!e) return;
 
-            const sortOrder = YEAR_FILTERS.find(
-                (f) => f.value === e.currentTarget.value,
-            )?.defaultOrder;
+            const sortBy = e.currentTarget.value;
+            const sortOrder = YEAR_FILTERS.find((f) => f.value === sortBy)?.defaultOrder;
 
             setFilter({
                 customFilters,
                 data: {
-                    sortBy: e.currentTarget.value as any,
+                    sortBy,
                     sortOrder: sortOrder || SortOrder.ASC,
                 },
-                itemType: 'year' as any,
+                itemType: LibraryItem.YEAR,
                 key: pageKey,
             });
         },
@@ -109,15 +99,23 @@ export const YearsListHeaderFilters = ({
     );
 
     const handleToggleSortOrder = useCallback(() => {
-        const newSortOrder = filter.sortOrder === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC;
+        const currentSortOrder = (filter as any)?.sortOrder || SortOrder.DESC;
+        const currentSortBy = (filter as any)?.sortBy || 'year';
+        const newSortOrder = currentSortOrder === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC;
 
         setFilter({
             customFilters,
-            data: { sortOrder: newSortOrder },
+            data: {
+                sortBy: currentSortBy,
+                sortOrder: newSortOrder,
+            },
             itemType: LibraryItem.YEAR,
             key: pageKey,
         });
-    }, [customFilters, filter.sortOrder, pageKey, setFilter]);
+
+        // Trigger refresh to update the views
+        setTimeout(() => handleRefresh(), 0);
+    }, [customFilters, filter, pageKey, setFilter, handleRefresh]);
 
     const handleItemSize = (e: number) => {
         if (isGrid) {
@@ -176,7 +174,7 @@ export const YearsListHeaderFilters = ({
     };
 
     // Type filter handling
-    const currentTypeFilter = (filter._custom as any)?.typeFilter || 'all';
+    const currentTypeFilter = ((filter as any)?._custom as any)?.typeFilter || 'all';
 
     const handleSetTypeFilter = useCallback(
         (e: any) => {
@@ -187,7 +185,7 @@ export const YearsListHeaderFilters = ({
                 customFilters,
                 data: {
                     _custom: {
-                        ...filter._custom,
+                        ...(filter as any)?._custom,
                         typeFilter,
                     },
                 },
@@ -195,7 +193,7 @@ export const YearsListHeaderFilters = ({
                 key: pageKey,
             });
         },
-        [customFilters, filter._custom, pageKey, setFilter],
+        [customFilters, filter, pageKey, setFilter],
     );
 
     const typeFilterLabel =
@@ -203,7 +201,7 @@ export const YearsListHeaderFilters = ({
             ? 'Decades Only'
             : currentTypeFilter === 'years'
               ? 'Years Only'
-              : 'All Years';
+              : 'All';
 
     return (
         <Flex justify="space-between">
@@ -248,9 +246,35 @@ export const YearsListHeaderFilters = ({
                     </DropdownMenu.Dropdown>
                 </DropdownMenu>
                 <Divider orientation="vertical" />
+                {/* Sort By Dropdown */}
+                <DropdownMenu position="bottom-start">
+                    <DropdownMenu.Target>
+                        <Button
+                            compact
+                            fw={600}
+                            size="md"
+                            variant="subtle"
+                        >
+                            {sortByLabel}
+                        </Button>
+                    </DropdownMenu.Target>
+                    <DropdownMenu.Dropdown>
+                        {YEAR_FILTERS.map((f) => (
+                            <DropdownMenu.Item
+                                $isActive={f.value === (filter as any)?.sortBy}
+                                key={`filter-${f.name}`}
+                                onClick={handleSetSortBy}
+                                value={f.value}
+                            >
+                                {f.name}
+                            </DropdownMenu.Item>
+                        ))}
+                    </DropdownMenu.Dropdown>
+                </DropdownMenu>
+                <Divider orientation="vertical" />
                 <OrderToggleButton
                     onToggle={handleToggleSortOrder}
-                    sortOrder={filter.sortOrder}
+                    sortOrder={(filter as any)?.sortOrder || SortOrder.DESC}
                 />
                 <Button
                     compact

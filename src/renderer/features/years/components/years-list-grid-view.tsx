@@ -16,7 +16,7 @@ import { useListContext } from '/@/renderer/context/list-context';
 import { usePlayQueueAdd } from '/@/renderer/features/player';
 import { AppRoute } from '/@/renderer/router/routes';
 import { useCurrentServer, useListStoreActions, useListStoreByKey } from '/@/renderer/store';
-import { LibraryItem } from '/@/shared/types/domain-types';
+import { LibraryItem, SortOrder } from '/@/shared/types/domain-types';
 import { ListDisplayType } from '/@/shared/types/types';
 
 interface YearsListGridViewProps {
@@ -39,7 +39,7 @@ export const YearsListGridView = ({ gridRef, itemCount }: YearsListGridViewProps
     const { isLoading, yearsWithAlbums } = useYearAlbumCounts(YEAR_PLAYLISTS);
 
     // Apply type filter
-    const typeFilter = (filter._custom as any)?.typeFilter || 'all';
+    const typeFilter = ((filter as any)?._custom as any)?.typeFilter || 'all';
     const filteredYears = useMemo(() => {
         if (typeFilter === 'decades') {
             return yearsWithAlbums.filter((year) => year.type === 'decade');
@@ -48,6 +48,47 @@ export const YearsListGridView = ({ gridRef, itemCount }: YearsListGridViewProps
         }
         return yearsWithAlbums;
     }, [yearsWithAlbums, typeFilter]);
+
+    // Apply sorting
+    const sortBy = (filter as any)?.sortBy || 'year';
+    const sortOrderValue = (filter as any)?.sortOrder || SortOrder.DESC;
+
+    // Ensure sortOrder is properly converted to enum value
+    const sortOrder =
+        sortOrderValue === SortOrder.ASC || sortOrderValue === 'asc'
+            ? SortOrder.ASC
+            : SortOrder.DESC;
+
+    const sortedAndFilteredYears = useMemo(() => {
+        const sorted = [...filteredYears].sort((a, b) => {
+            let aValue, bValue;
+
+            switch (sortBy) {
+                case 'albumCount':
+                    aValue = a.albumCount || 0;
+                    bValue = b.albumCount || 0;
+                    break;
+                case 'year':
+                default:
+                    // For decades, use the start year (e.g., 1980 for "1980s")
+                    aValue =
+                        a.type === 'decade' ? parseInt(a.displayName) : parseInt(a.displayName);
+                    bValue =
+                        b.type === 'decade' ? parseInt(b.displayName) : parseInt(b.displayName);
+                    break;
+            }
+
+            if (aValue < bValue) {
+                return sortOrder === SortOrder.ASC ? -1 : 1;
+            }
+            if (aValue > bValue) {
+                return sortOrder === SortOrder.ASC ? 1 : -1;
+            }
+            return 0;
+        });
+
+        return sorted;
+    }, [filteredYears, sortBy, sortOrder]);
 
     const cardRows = useMemo(() => {
         const rows = [YEAR_CARD_ROWS.name, YEAR_CARD_ROWS.albumCount];
@@ -73,7 +114,7 @@ export const YearsListGridView = ({ gridRef, itemCount }: YearsListGridViewProps
 
     const fetchInitialData = useCallback(() => {
         // Transform years to match the expected format
-        return filteredYears.map((year) => ({
+        return sortedAndFilteredYears.map((year) => ({
             ...year,
             id: year.id,
             imageUrl: 'mosaic://year-albums', // Use special URL for year mosaics
@@ -82,12 +123,12 @@ export const YearsListGridView = ({ gridRef, itemCount }: YearsListGridViewProps
             // Add type for visual badge
             yearType: year.type,
         })) as any;
-    }, [filteredYears]);
+    }, [sortedAndFilteredYears]);
 
     const fetch = useCallback(
         async ({ skip, take }: { skip: number; take: number }) => {
             // Transform years and slice for pagination
-            const transformedYears = filteredYears.map((year) => ({
+            const transformedYears = sortedAndFilteredYears.map((year) => ({
                 ...year,
                 id: year.id,
                 imageUrl: 'mosaic://year-albums',
@@ -100,10 +141,10 @@ export const YearsListGridView = ({ gridRef, itemCount }: YearsListGridViewProps
             return {
                 items,
                 startIndex: skip,
-                totalRecordCount: filteredYears.length,
+                totalRecordCount: sortedAndFilteredYears.length,
             };
         },
-        [filteredYears],
+        [sortedAndFilteredYears],
     );
 
     const route = {
@@ -123,11 +164,11 @@ export const YearsListGridView = ({ gridRef, itemCount }: YearsListGridViewProps
                         handlePlayQueueAdd={handlePlayQueueAdd}
                         height={height}
                         initialScrollOffset={initialScrollOffset}
-                        itemCount={filteredYears.length}
+                        itemCount={sortedAndFilteredYears.length}
                         itemGap={grid?.itemGap ?? 10}
                         itemSize={grid?.itemSize || 200}
                         itemType={LibraryItem.GENRE}
-                        key={`years-list-${server?.id}-${display}-${typeFilter}`}
+                        key={`years-list-${server?.id}-${display}-${typeFilter}-${sortBy}-${sortOrder}`}
                         loading={isLoading}
                         minimumBatchSize={40}
                         onScroll={handleGridScroll}

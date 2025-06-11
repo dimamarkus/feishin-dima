@@ -13,7 +13,7 @@ import { useVirtualTable } from '/@/renderer/components/virtual-table/hooks/use-
 import { useListContext } from '/@/renderer/context/list-context';
 import { AppRoute } from '/@/renderer/router/routes';
 import { useCurrentServer, useListStoreByKey } from '/@/renderer/store';
-import { LibraryItem } from '/@/shared/types/domain-types';
+import { LibraryItem, SortOrder } from '/@/shared/types/domain-types';
 
 interface YearsListTableViewProps {
     itemCount?: number;
@@ -30,7 +30,7 @@ export const YearsListTableView = ({ itemCount, tableRef }: YearsListTableViewPr
     const { yearsWithAlbums } = useYearAlbumCounts(YEAR_PLAYLISTS);
 
     // Apply type filter from store
-    const typeFilter = (filter._custom as any)?.typeFilter || 'all';
+    const typeFilter = ((filter as any)?._custom as any)?.typeFilter || 'all';
     const filteredYears = useMemo(() => {
         if (typeFilter === 'decades') {
             return yearsWithAlbums.filter((year) => year.type === 'decade');
@@ -40,13 +40,54 @@ export const YearsListTableView = ({ itemCount, tableRef }: YearsListTableViewPr
         return yearsWithAlbums;
     }, [yearsWithAlbums, typeFilter]);
 
+    // Apply sorting
+    const sortBy = (filter as any)?.sortBy || 'year';
+    const sortOrderValue = (filter as any)?.sortOrder || SortOrder.DESC;
+
+    // Ensure sortOrder is properly converted to enum value
+    const sortOrder =
+        sortOrderValue === SortOrder.ASC || sortOrderValue === 'asc'
+            ? SortOrder.ASC
+            : SortOrder.DESC;
+
+    const sortedAndFilteredYears = useMemo(() => {
+        const sorted = [...filteredYears].sort((a, b) => {
+            let aValue, bValue;
+
+            switch (sortBy) {
+                case 'albumCount':
+                    aValue = a.albumCount || 0;
+                    bValue = b.albumCount || 0;
+                    break;
+                case 'year':
+                default:
+                    // For decades, use the start year (e.g., 1980 for "1980s")
+                    aValue =
+                        a.type === 'decade' ? parseInt(a.displayName) : parseInt(a.displayName);
+                    bValue =
+                        b.type === 'decade' ? parseInt(b.displayName) : parseInt(b.displayName);
+                    break;
+            }
+
+            if (aValue < bValue) {
+                return sortOrder === SortOrder.ASC ? -1 : 1;
+            }
+            if (aValue > bValue) {
+                return sortOrder === SortOrder.ASC ? 1 : -1;
+            }
+            return 0;
+        });
+
+        return sorted;
+    }, [filteredYears, sortBy, sortOrder]);
+
     // Convert years with album counts to format expected by the table
     const tableData = useMemo(() => {
-        return filteredYears.map((year) => ({
+        return sortedAndFilteredYears.map((year) => ({
             ...year,
             name: year.displayName, // Map displayName to name for table display
         }));
-    }, [filteredYears]);
+    }, [sortedAndFilteredYears]);
 
     const tableProps = useVirtualTable({
         contextMenu: [], // No context menu for years for now
@@ -86,7 +127,7 @@ export const YearsListTableView = ({ itemCount, tableRef }: YearsListTableViewPr
         <VirtualGridAutoSizerContainer>
             <VirtualTable
                 // Key is used to force remount of table when display, rowHeight, server, or filter changes
-                key={`years-table-${tableProps.rowHeight}-${server?.id}-${typeFilter}`}
+                key={`years-table-${tableProps.rowHeight}-${server?.id}-${typeFilter}-${sortBy}-${sortOrder}`}
                 ref={tableRef}
                 rowData={tableData} // Provide static data directly
                 {...tableProps}
