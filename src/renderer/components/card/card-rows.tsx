@@ -410,3 +410,22 @@ export const LABEL_CARD_ROWS: { [key: string]: CardRow<any> } = {
         },
     },
 };
+
+export const YEAR_CARD_ROWS: { [key: string]: CardRow<any> } = {
+    albumCount: {
+        format: (year) => {
+            const count = year.albumCount;
+            if (count === undefined || count === null) return '';
+            return count === 1 ? '1 album' : `${count} albums`;
+        },
+        property: 'albumCount',
+    },
+    name: {
+        property: 'displayName',
+        // Note: Route will be handled by the card component since decades and years have different routes
+    },
+    type: {
+        format: (year) => (year.type === 'decade' ? 'Decade' : 'Year'),
+        property: 'type',
+    },
+};

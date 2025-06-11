@@ -9,6 +9,7 @@ import { CardRows } from '/@/renderer/components/card';
 import { Skeleton } from '/@/renderer/components/skeleton';
 import { GridCardControls } from '/@/renderer/components/virtual-grid/grid-card/grid-card-controls';
 import { LabelAlbumMosaic } from '/@/renderer/features/labels/components/label-album-mosaic';
+import { YearAlbumMosaic } from '/@/renderer/features/years/components/year-album-mosaic';
 import {
     Album,
     AlbumArtist,
@@ -138,15 +139,29 @@ export const PosterCard = ({
     const navigate = useNavigate();
 
     if (data) {
-        const path = generatePath(
-            controls.route.route as string,
-            controls.route.slugs?.reduce((acc, slug) => {
-                return {
-                    ...acc,
-                    [slug.slugProperty]: data[slug.idProperty],
-                };
-            }, {}),
-        );
+        // Handle special routing for years (decades vs individual years)
+        let path: string;
+        if (controls.itemType === LibraryItem.GENRE && data?.type) {
+            // This is a year item with special routing logic
+            if (data.type === 'decade') {
+                path = generatePath('/library/years/decade/:decadeId', {
+                    decadeId: data.displayName,
+                });
+            } else {
+                path = generatePath('/library/years/:yearId', { yearId: data.displayName });
+            }
+        } else {
+            // Normal routing logic
+            path = generatePath(
+                controls.route.route as string,
+                controls.route.slugs?.reduce((acc, slug) => {
+                    return {
+                        ...acc,
+                        [slug.slugProperty]: data[slug.idProperty],
+                    };
+                }, {}),
+            );
+        }
 
         let Placeholder = RiAlbumFill;
 
@@ -180,6 +195,12 @@ export const PosterCard = ({
                             <LabelAlbumMosaic
                                 albums={data.albums || []}
                                 size={controls.itemWidth || 200}
+                            />
+                        ) : controls.itemType === LibraryItem.GENRE &&
+                          data?.imageUrl === 'mosaic://year-albums' ? (
+                            <YearAlbumMosaic
+                                size={controls.itemWidth || 200}
+                                yearPlaylist={data}
                             />
                         ) : data?.imageUrl ? (
                             <Image

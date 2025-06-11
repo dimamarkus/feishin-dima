@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useRef, useState } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -8,12 +8,19 @@ import { YearAlbumMosaic } from './year-album-mosaic';
 import { YearsListHeader } from './years-list-header';
 import { YearsListTableView } from './years-list-table-view';
 
+import { Spinner } from '/@/renderer/components';
 import { Text } from '/@/renderer/components/text';
 import { VirtualInfiniteGridRef } from '/@/renderer/components/virtual-grid';
 import { useListContext } from '/@/renderer/context/list-context';
 import { AppRoute } from '/@/renderer/router/routes';
 import { useCurrentServer, useListStoreByKey } from '/@/renderer/store';
 import { ListDisplayType } from '/@/shared/types/types';
+
+const YearsListGridView = lazy(() =>
+    import('/@/renderer/features/years/components/years-list-grid-view').then((module) => ({
+        default: module.YearsListGridView,
+    })),
+);
 
 type YearsListContentProps = {
     itemCount?: number;
@@ -136,50 +143,19 @@ export const YearsListContent = ({ itemCount }: YearsListContentProps) => {
                 onSearch={handleSearch}
                 tableRef={tableRef}
             />
-            {isTableView ? (
-                <YearsListTableView
-                    itemCount={filteredYears.length}
-                    tableRef={tableRef}
-                />
-            ) : (
-                <GridContainer>
-                    {filteredYears.map((year: YearPlaylist) => (
-                        <YearCard
-                            key={year.id}
-                            onClick={() => handleItemClick(year)}
-                        >
-                            <YearAlbumMosaic
-                                size={168}
-                                yearPlaylist={year}
-                            />
-                            <YearInfo>
-                                <Text
-                                    size="lg"
-                                    style={{
-                                        fontWeight: 600,
-                                        marginBottom: '4px',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        whiteSpace: 'nowrap',
-                                    }}
-                                >
-                                    {year.displayName}
-                                </Text>
-                                <Text
-                                    size="sm"
-                                    style={{
-                                        color: 'var(--main-fg-secondary)',
-                                    }}
-                                >
-                                    {year.type === 'decade' ? 'Decade' : 'Year'}
-                                    {(year as any).albumCount !== undefined &&
-                                        ` • ${(year as any).albumCount} albums`}
-                                </Text>
-                            </YearInfo>
-                        </YearCard>
-                    ))}
-                </GridContainer>
-            )}
+            <Suspense fallback={<Spinner container />}>
+                {isTableView ? (
+                    <YearsListTableView
+                        itemCount={filteredYears.length}
+                        tableRef={tableRef}
+                    />
+                ) : (
+                    <YearsListGridView
+                        gridRef={gridRef}
+                        itemCount={filteredYears.length}
+                    />
+                )}
+            </Suspense>
         </Container>
     );
 };
