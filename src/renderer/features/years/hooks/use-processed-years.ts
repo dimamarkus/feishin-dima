@@ -31,8 +31,8 @@ export const useProcessedYears = (searchTerm = ''): ProcessedYearsResult => {
     // Try optimized data fetching first
     const optimizedResult = useOptimizedYearAlbumCounts(YEAR_PLAYLISTS);
 
-    // Temporarily force fallback to debug the optimized version
-    const shouldUseFallback = true; // !optimizedResult.isLoading && optimizedResult.yearsWithAlbums.length === 0;
+    // Enable optimized version now that it handles song-based year assignment
+    const shouldUseFallback = false; // optimizedResult.isLoading || optimizedResult.yearsWithAlbums.length === 0;
     const fallbackResult = useYearAlbumCounts(YEAR_PLAYLISTS);
 
     // Choose which result to use
@@ -44,6 +44,26 @@ export const useProcessedYears = (searchTerm = ''): ProcessedYearsResult => {
               yearsWithAlbums: fallbackResult.yearsWithAlbums,
           }
         : optimizedResult;
+
+    // Debug logging for the new song-based logic (only log once when data changes)
+    const debugKey = `${optimizedResult.yearsWithAlbums.length}-${optimizedResult.isLoading}`;
+    const prevDebugKey = useMemo(() => debugKey, [debugKey]);
+
+    if (
+        debugKey !== prevDebugKey &&
+        !optimizedResult.isLoading &&
+        optimizedResult.yearsWithAlbums.length > 0
+    ) {
+        console.log('🎵 Song-based year assignment results:', {
+            sampleYears: optimizedResult.yearsWithAlbums.slice(0, 5).map((y) => ({
+                albumCount: y.albumCount,
+                name: y.displayName,
+                type: y.type,
+            })),
+            totalYears: optimizedResult.yearsWithAlbums.length,
+            usingOptimized: !shouldUseFallback,
+        });
+    }
 
     // Extract filter values with defaults
     const typeFilter = ((filter as any)?._custom as any)?.typeFilter || 'all';

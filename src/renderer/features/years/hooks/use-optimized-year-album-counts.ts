@@ -4,10 +4,11 @@ import { useMemo } from 'react';
 import { YearPlaylist } from '../years-playlists';
 
 import { useAlbumList } from '/@/renderer/features/albums/queries/album-list-query';
+import { useSongList } from '/@/renderer/features/songs/queries/song-list-query';
 import { useCurrentServer } from '/@/renderer/store';
-import { Album, AlbumListSort, SortOrder } from '/@/shared/types/domain-types';
+import { Album, AlbumListSort, Song, SongListSort, SortOrder } from '/@/shared/types/domain-types';
 
-interface YearAlbumCounts {
+export interface YearAlbumCounts {
     [yearId: string]: {
         albums: Album[];
         count: number;
@@ -19,8 +20,9 @@ interface YearWithAlbumCount extends YearPlaylist {
 }
 
 /**
- * Optimized hook that fetches all albums in one request and processes counts client-side
- * Reduces 85+ API calls to just 1-2 calls with aggressive caching
+ * Optimized hook that fetches all albums and songs in one request each and processes counts client-side
+ * Analyzes actual song years to ensure albums only appear in years where they have songs
+ * Reduces 85+ API calls to just 2 calls with aggressive caching
  */
 export const useOptimizedYearAlbumCounts = (years: YearPlaylist[]) => {
     const server = useCurrentServer();
@@ -44,9 +46,77 @@ export const useOptimizedYearAlbumCounts = (years: YearPlaylist[]) => {
         serverId: server?.id,
     });
 
-    // Process albums to generate year counts - memoized with stable dependencies
-    const { albumsByYear, yearCounts } = useMemo(() => {
+    // Single query to fetch all songs from 1950 to current year + 1
+    const allSongsQuery = useSongList({
+        options: {
+            cacheTime: 1000 * 60 * 60 * 2, // 2 hours cache - very aggressive
+            refetchOnWindowFocus: false, // Don't refetch on focus
+            staleTime: 1000 * 60 * 30, // 30 minutes fresh
+        },
+        query: {
+            limit: 20000, // Increased limit to ensure we get all songs
+            maxYear: currentYear + 1,
+            minYear: 1950,
+            sortBy: SongListSort.YEAR,
+            sortOrder: SortOrder.ASC,
+            startIndex: 0,
+        },
+        serverId: server?.id,
+    });
+
+    // Process songs to determine the latest year for each album
+    const albumLatestYears = useMemo((): {
+        [albumId: string]: { album: Album; latestYear: number };
+    } => {
         const albums = allAlbumsQuery.data?.items || [];
+        const songs = allSongsQuery.data?.items || [];
+        const result: { [albumId: string]: { album: Album; latestYear: number } } = {};
+
+        // Debug logging
+        console.log('🎵 Simplified song-based processing:', {
+            albumCount: albums.length,
+            songCount: songs.length,
+        });
+
+        // Initialize album data with their release year as fallback
+        albums.forEach((album) => {
+            result[album.id] = {
+                album,
+                latestYear: album.releaseYear || 0,
+            };
+        });
+
+        // Find the latest year for each album based on its songs
+        songs.forEach((song) => {
+            if (!song.albumId || !song.releaseYear) return;
+
+            // Convert song.releaseYear from string to number
+            const songYear = parseInt(song.releaseYear, 10);
+            if (isNaN(songYear)) return;
+
+            const albumData = result[song.albumId];
+            if (albumData) {
+                // Update to the latest year found in the album's songs
+                albumData.latestYear = Math.max(albumData.latestYear, songYear);
+            }
+        });
+
+        // Debug: Show some examples
+        const exampleAlbums = Object.values(result).slice(0, 5);
+        console.log(
+            '📅 Album latest years (examples):',
+            exampleAlbums.map((data) => ({
+                albumName: data.album.name,
+                albumReleaseYear: data.album.releaseYear,
+                latestSongYear: data.latestYear,
+            })),
+        );
+
+        return result;
+    }, [allAlbumsQuery.data?.items, allSongsQuery.data?.items]);
+
+    // Process albums to generate year counts based on latest year only
+    const { albumsByYear, yearCounts } = useMemo(() => {
         const counts: YearAlbumCounts = {};
         const albumsMap: { [yearId: string]: Album[] } = {};
 
@@ -56,27 +126,24 @@ export const useOptimizedYearAlbumCounts = (years: YearPlaylist[]) => {
             albumsMap[year.id] = [];
         });
 
-        // Process each album and assign to appropriate years/decades
-        albums.forEach((album) => {
-            if (!album.releaseYear) {
-                return;
-            }
+        // Process each album - assign to only its latest year
+        Object.values(albumLatestYears).forEach(({ album, latestYear }) => {
+            // Skip albums with no valid year
+            if (!latestYear || latestYear === 0) return;
 
-            const albumYear = album.releaseYear;
-
-            // Find matching years and decades for this album
+            // Find the matching year/decade for this album's latest year
             years.forEach((yearPlaylist) => {
                 let matches = false;
 
                 if (yearPlaylist.type === 'year') {
                     // Individual year match
-                    matches = albumYear === yearPlaylist.releaseYearValue;
+                    matches = latestYear === yearPlaylist.releaseYearValue;
                 } else if (
                     yearPlaylist.type === 'decade' &&
                     Array.isArray(yearPlaylist.releaseYearValue)
                 ) {
                     // Decade range match
-                    matches = yearPlaylist.releaseYearValue.includes(albumYear);
+                    matches = yearPlaylist.releaseYearValue.includes(latestYear);
                 }
 
                 if (matches) {
@@ -92,7 +159,7 @@ export const useOptimizedYearAlbumCounts = (years: YearPlaylist[]) => {
         });
 
         return { albumsByYear: albumsMap, yearCounts: counts };
-    }, [allAlbumsQuery.data?.items, years]);
+    }, [albumLatestYears, years]);
 
     // Convert to the format expected by existing components
     const yearsWithCounts: YearWithAlbumCount[] = useMemo(() => {
@@ -127,8 +194,8 @@ export const useOptimizedYearAlbumCounts = (years: YearPlaylist[]) => {
     return {
         albumsByYear,
         getAlbumsForYear,
-        isError: allAlbumsQuery.isError,
-        isLoading: allAlbumsQuery.isLoading,
+        isError: allAlbumsQuery.isError || allSongsQuery.isError,
+        isLoading: allAlbumsQuery.isLoading || allSongsQuery.isLoading,
         yearsWithAlbums,
         yearsWithCounts,
     };
