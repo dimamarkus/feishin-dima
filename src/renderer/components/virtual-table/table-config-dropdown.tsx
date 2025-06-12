@@ -44,6 +44,10 @@ export const SONG_TABLE_COLUMNS = [
         value: TableColumn.GENRE,
     },
     {
+        label: i18n.t('table.config.label.key', { postProcess: 'titleCase' }),
+        value: TableColumn.KEY,
+    },
+    {
         label: i18n.t('table.config.label.year', { postProcess: 'titleCase' }),
         value: TableColumn.YEAR,
     },

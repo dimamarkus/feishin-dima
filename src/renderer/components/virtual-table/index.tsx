@@ -222,6 +222,54 @@ const tableColumns: { [key: string]: ColDef } = {
         valueGetter: (params: ValueGetterParams) => (params.data ? params.data.genres : undefined),
         width: 100,
     },
+    key: {
+        cellRenderer: (params: ICellRendererParams) => GenericCell(params, { position: 'center' }),
+        colId: TableColumn.KEY,
+        headerComponent: (params: IHeaderParams) =>
+            GenericTableHeader(params, { position: 'center' }),
+        headerName: i18n.t('table.column.key'),
+        suppressSizeToFit: true,
+        valueGetter: (params: ValueGetterParams) => {
+            if (!params.data?.tags) {
+                return '';
+            }
+
+            // Check for various key field names
+            const rawKeyValue =
+                params.data.tags.initialkey?.[0] ||
+                params.data.tags.key?.[0] ||
+                params.data.tags.INITIALKEY?.[0] ||
+                params.data.tags.KEY?.[0] ||
+                params.data.tags.musickey?.[0] ||
+                params.data.tags.MUSICKEY?.[0] ||
+                undefined;
+
+            if (rawKeyValue) {
+                // Try to decode if it looks like base64 JSON
+                if (rawKeyValue.length > 20 && !rawKeyValue.includes(' ')) {
+                    try {
+                        const decoded = atob(rawKeyValue);
+                        const parsed = JSON.parse(decoded);
+                        if (parsed.key) {
+                            return parsed.key;
+                        }
+                    } catch (e) {
+                        // Failed to decode, fall through to use raw value
+                    }
+                }
+
+                // If it's already a simple key format, use it directly
+                if (rawKeyValue.match(/^[0-9]{0,2}[A-G][#b]?[m]?$/)) {
+                    return rawKeyValue;
+                }
+
+                return rawKeyValue;
+            }
+
+            return '';
+        },
+        width: 60,
+    },
     lastPlayedAt: {
         cellRenderer: (params: ICellRendererParams) => GenericCell(params, { position: 'center' }),
         colId: TableColumn.LAST_PLAYED,

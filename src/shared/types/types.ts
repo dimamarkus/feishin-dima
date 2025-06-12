@@ -149,6 +149,7 @@ export enum TableColumn {
     DISC_NUMBER = 'discNumber',
     DURATION = 'duration',
     GENRE = 'genre',
+    KEY = 'key',
     LABEL = 'label',
     LAST_PLAYED = 'lastPlayedAt',
     OWNER = 'username',
