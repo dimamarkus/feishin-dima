@@ -1,15 +1,18 @@
 import { Group, Table } from '@mantine/core';
+import { useQuery } from '@tanstack/react-query';
 import { ReactNode } from 'react';
 import { TFunction, useTranslation } from 'react-i18next';
 import { RiCheckFill, RiCloseFill } from 'react-icons/ri';
 import { generatePath } from 'react-router';
 import { Link } from 'react-router-dom';
 
-import { Spoiler, Text } from '/@/renderer/components';
+import { api } from '/@/renderer/api';
+import { Spinner, Spoiler, Text } from '/@/renderer/components';
 import { Separator } from '/@/renderer/components/separator';
 import { SongPath } from '/@/renderer/features/item-details/components/song-path';
 import { useGenreRoute } from '/@/renderer/hooks/use-genre-route';
 import { AppRoute } from '/@/renderer/router/routes';
+import { useCurrentServer } from '/@/renderer/store';
 import { formatDurationString, formatSizeString } from '/@/renderer/utils';
 import { formatDateRelative, formatRating } from '/@/renderer/utils/format';
 import { replaceURLWithHTMLLinks } from '/@/renderer/utils/linkify';
@@ -237,10 +240,89 @@ const SongPropertyMapping: ItemDetailRow<Song>[] = [
     { key: 'discNumber', label: 'common.disc' },
     { key: 'trackNumber', label: 'common.trackNumber' },
     { key: 'releaseYear', label: 'filter.releaseYear' },
+    {
+        label: 'common.catalogNumber',
+        render: (song) => {
+            if (!song.tags) return null;
+
+            // Look for catalog number in various tag fields
+            const catalogValue =
+                song.tags.catalognumber?.[0] ||
+                song.tags.CATALOGNUMBER?.[0] ||
+                song.tags.catalogNumber?.[0] ||
+                song.tags.CATALOGNUMBER?.[0] ||
+                song.tags.labelno?.[0] ||
+                song.tags.LABELNO?.[0] ||
+                undefined;
+
+            return catalogValue || null;
+        },
+    },
     { label: 'entity.genre_other', render: FormatGenre },
     {
         label: 'common.duration',
         render: (song) => formatDurationString(song.duration),
+    },
+    {
+        label: 'common.key',
+        render: (song) => {
+            if (!song.tags) {
+                return null;
+            }
+
+            // Extract key using same logic as table column
+            const rawKeyValue =
+                song.tags.initialkey?.[0] ||
+                song.tags.key?.[0] ||
+                song.tags.INITIALKEY?.[0] ||
+                song.tags.KEY?.[0] ||
+                song.tags.musickey?.[0] ||
+                song.tags.MUSICKEY?.[0] ||
+                undefined;
+
+            if (rawKeyValue) {
+                // Try to decode if it looks like base64 JSON
+                if (rawKeyValue.length > 20 && !rawKeyValue.includes(' ')) {
+                    try {
+                        const decoded = atob(rawKeyValue);
+                        const parsed = JSON.parse(decoded);
+                        if (parsed.key) {
+                            return parsed.key;
+                        }
+                    } catch (e) {
+                        // Failed to decode, fall through to use raw value
+                    }
+                }
+
+                // If it's already a simple key format, use it directly
+                if (rawKeyValue.match(/^[0-9]{0,2}[A-G][#b]?[m]?$/)) {
+                    return rawKeyValue;
+                }
+
+                return rawKeyValue;
+            }
+
+            return null;
+        },
+    },
+    { key: 'bpm', label: 'common.bpm' },
+    {
+        label: 'entity.label_one',
+        render: (song) => {
+            if (!song.tags) return null;
+
+            // Look for label in various tag fields
+            const labelValue =
+                song.tags.label?.[0] ||
+                song.tags.LABEL?.[0] ||
+                song.tags.recordlabel?.[0] ||
+                song.tags.RECORDLABEL?.[0] ||
+                song.tags.publisher?.[0] ||
+                song.tags.PUBLISHER?.[0] ||
+                undefined;
+
+            return labelValue || null;
+        },
     },
     { label: 'filter.isCompilation', render: (song) => BoolField(song.compilation || false) },
     { key: 'container', label: 'common.codec' },
@@ -346,7 +428,7 @@ const handleParticipants = (item: Album | Song, t: TFunction) => {
     return [];
 };
 
-export const ItemDetailsModal = ({ item }: ItemDetailsModalProps) => {
+const ItemDetailsModalContent = ({ item }: ItemDetailsModalProps) => {
     const { t } = useTranslation();
     let body: ReactNode[] = [];
 
@@ -380,4 +462,40 @@ export const ItemDetailsModal = ({ item }: ItemDetailsModalProps) => {
             </Table>
         </Group>
     );
+};
+
+export const ItemDetailsModal = ({ item }: ItemDetailsModalProps) => {
+    const server = useCurrentServer();
+
+    // For songs, fetch full details with tags if tags are missing
+    const songDetailQuery = useQuery({
+        enabled: item.itemType === LibraryItem.SONG && !item.tags && !!server,
+        queryFn: async ({ signal }) => {
+            if (!server) throw new Error('No server available');
+
+            return api.controller.getSongDetail({
+                apiClientProps: { server, signal },
+                query: { id: item.id },
+            });
+        },
+        queryKey: ['songDetail', item.id, server?.id],
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
+
+    // Use detailed song data if available, otherwise use the original item
+    const itemToDisplay = songDetailQuery.data || item;
+
+    // Show loading spinner while fetching song details
+    if (item.itemType === LibraryItem.SONG && !item.tags && songDetailQuery.isLoading) {
+        return (
+            <Group
+                p="xl"
+                position="center"
+            >
+                <Spinner />
+            </Group>
+        );
+    }
+
+    return <ItemDetailsModalContent item={itemToDisplay} />;
 };
