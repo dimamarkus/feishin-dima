@@ -28,6 +28,10 @@ export const SONG_TABLE_COLUMNS = [
         value: TableColumn.DURATION,
     },
     {
+        label: i18n.t('table.config.label.energyLevel', { postProcess: 'titleCase' }),
+        value: TableColumn.ENERGY_LEVEL,
+    },
+    {
         label: i18n.t('table.config.label.album', { postProcess: 'titleCase' }),
         value: TableColumn.ALBUM,
     },

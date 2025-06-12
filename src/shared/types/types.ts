@@ -148,6 +148,8 @@ export enum TableColumn {
     DATE_ADDED = 'dateAdded',
     DISC_NUMBER = 'discNumber',
     DURATION = 'duration',
+    ENERGY_LEVEL = 'energyLevel',
+    FAVORITE = 'favorite',
     GENRE = 'genre',
     KEY = 'key',
     LABEL = 'label',

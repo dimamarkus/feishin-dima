@@ -61,6 +61,8 @@
         "edit": "edit",
         "enable": "enable",
         "expand": "expand",
+        "energy": "energy",
+        "energyLevel": "energy level",
         "favorite": "favorite",
         "filter_one": "filter",
         "filter_other": "filters",
@@ -762,7 +764,8 @@
             "size": "$t(common.size)",
             "songCount": "$t(entity.track_other)",
             "title": "title",
-            "trackNumber": "track"
+            "trackNumber": "track",
+            "energyLevel": "energy level"
         },
         "config": {
             "general": {
@@ -805,7 +808,8 @@
                 "title": "$t(common.title)",
                 "titleCombined": "$t(common.title) (combined)",
                 "trackNumber": "track number",
-                "year": "$t(common.year)"
+                "year": "$t(common.year)",
+                "energyLevel": "energy level"
             },
             "view": {
                 "card": "card",

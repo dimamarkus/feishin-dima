@@ -307,6 +307,44 @@ const SongPropertyMapping: ItemDetailRow<Song>[] = [
     },
     { key: 'bpm', label: 'common.bpm' },
     {
+        label: 'common.energyLevel',
+        render: (song) => {
+            if (!song.tags) return null;
+
+            // Extract energy level from various tag fields
+            const energyValue =
+                song.tags.energylevel?.[0] ||
+                song.tags.ENERGYLEVEL?.[0] ||
+                song.tags.energy?.[0] ||
+                song.tags.ENERGY?.[0] ||
+                undefined;
+
+            if (energyValue) {
+                // Try to decode if it looks like base64 JSON (Mixed In Key format)
+                if (energyValue.length > 20 && !energyValue.includes(' ')) {
+                    try {
+                        const decoded = atob(energyValue);
+                        const parsed = JSON.parse(decoded);
+                        if (parsed.energy !== undefined) {
+                            return parsed.energy;
+                        }
+                        if (parsed.energyLevel !== undefined) {
+                            return parsed.energyLevel;
+                        }
+                    } catch (e) {
+                        // Failed to decode, fall through to use raw value
+                    }
+                }
+
+                // Try to parse as integer
+                const parsed = parseInt(energyValue, 10);
+                return !isNaN(parsed) ? parsed : null;
+            }
+
+            return null;
+        },
+    },
+    {
         label: 'entity.label_one',
         render: (song) => {
             if (!song.tags) return null;
