@@ -1,7 +1,8 @@
 import { Group, Rating, Stack } from '@mantine/core';
 import { forwardRef, Fragment, Ref } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router';
+import { generatePath, useParams } from 'react-router';
+import { createSearchParams, Link } from 'react-router-dom';
 
 import { Text } from '/@/renderer/components';
 import { useAlbumArtistDetail } from '/@/renderer/features/artists/queries/album-artist-detail-query';
@@ -34,18 +35,52 @@ export const AlbumArtistDetailHeader = forwardRef(
         const duration = detailQuery?.data?.duration;
         const durationEnabled = duration !== null && duration !== undefined;
 
+        // Create the same links used by the VIEW DISCOGRAPHY and VIEW ALL TRACKS buttons
+        const artistDiscographyLink = `${generatePath(
+            AppRoute.LIBRARY_ALBUM_ARTISTS_DETAIL_DISCOGRAPHY,
+            {
+                albumArtistId: routeId,
+            },
+        )}?${createSearchParams({
+            artistId: routeId,
+            artistName: detailQuery?.data?.name || '',
+        })}`;
+
+        const artistSongsLink = `${generatePath(AppRoute.LIBRARY_ALBUM_ARTISTS_DETAIL_SONGS, {
+            albumArtistId: routeId,
+        })}?${createSearchParams({
+            artistId: routeId,
+            artistName: detailQuery?.data?.name || '',
+        })}`;
+
         const metadataItems = [
             {
                 enabled: albumCount !== null && albumCount !== undefined,
                 id: 'albumCount',
                 secondary: false,
-                value: t('entity.albumWithCount', { count: albumCount || 0 }),
+                value: (
+                    <Text
+                        $link
+                        component={Link}
+                        to={artistDiscographyLink}
+                    >
+                        {t('entity.albumWithCount', { count: albumCount || 0 })}
+                    </Text>
+                ),
             },
             {
                 enabled: songCount !== null && songCount !== undefined,
                 id: 'songCount',
                 secondary: false,
-                value: t('entity.trackWithCount', { count: songCount || 0 }),
+                value: (
+                    <Text
+                        $link
+                        component={Link}
+                        to={artistSongsLink}
+                    >
+                        {t('entity.trackWithCount', { count: songCount || 0 })}
+                    </Text>
+                ),
             },
             {
                 enabled: durationEnabled,
@@ -86,7 +121,11 @@ export const AlbumArtistDetailHeader = forwardRef(
                             .map((item, index) => (
                                 <Fragment key={`item-${item.id}-${index}`}>
                                     {index > 0 && <Text $noSelect>•</Text>}
-                                    <Text $secondary={item.secondary}>{item.value}</Text>
+                                    {typeof item.value === 'string' ? (
+                                        <Text $secondary={item.secondary}>{item.value}</Text>
+                                    ) : (
+                                        item.value
+                                    )}
                                 </Fragment>
                             ))}
                         {showRating && (
