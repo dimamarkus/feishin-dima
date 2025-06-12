@@ -438,6 +438,30 @@ const tableColumns: { [key: string]: ColDef } = {
             params.data ? params.data.songCount : undefined,
         width: 80,
     },
+    time: {
+        cellRenderer: (params: ICellRendererParams) => GenericCell(params, { position: 'center' }),
+        colId: TableColumn.TIME,
+        headerComponent: (params: IHeaderParams) =>
+            GenericTableHeader(params, { position: 'center' }),
+        headerName: i18n.t('common.time'),
+        suppressSizeToFit: true,
+        valueGetter: (params: ValueGetterParams) => {
+            if (!params.data?.tags) {
+                return '';
+            }
+
+            // Extract time from lyricist tag (based on your time feature implementation)
+            const timeValue = params.data.tags.lyricist?.[0] || undefined;
+
+            if (timeValue) {
+                // Return the time value as-is (e.g., "3am", "11pm", "15:00")
+                return timeValue;
+            }
+
+            return '';
+        },
+        width: 60,
+    },
     title: {
         cellRenderer: TitleCell,
         colId: TableColumn.TITLE,

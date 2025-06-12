@@ -119,7 +119,8 @@
         "unknown": "unknown",
         "version": "version",
         "year": "year",
-        "yes": "yes"
+        "yes": "yes",
+        "time": "time"
     },
     "entity": {
         "album_one": "album",
@@ -809,7 +810,8 @@
                 "titleCombined": "$t(common.title) (combined)",
                 "trackNumber": "track number",
                 "year": "$t(common.year)",
-                "energyLevel": "energy level"
+                "energyLevel": "energy level",
+                "time": "time"
             },
             "view": {
                 "card": "card",
