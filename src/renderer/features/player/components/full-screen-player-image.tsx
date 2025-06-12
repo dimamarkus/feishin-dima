@@ -1,5 +1,6 @@
 import { Center, Flex, Group, Stack } from '@mantine/core';
 import { useSetState } from '@mantine/hooks';
+import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, HTMLMotionProps, motion, Variants } from 'framer-motion';
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { RiAlbumFill } from 'react-icons/ri';
@@ -7,10 +8,16 @@ import { generatePath } from 'react-router';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { api } from '/@/renderer/api';
 import { Badge, Text, TextTitle } from '/@/renderer/components';
 import { useFastAverageColor } from '/@/renderer/hooks';
 import { AppRoute } from '/@/renderer/router/routes';
-import { useFullScreenPlayerStore, usePlayerData, usePlayerStore } from '/@/renderer/store';
+import {
+    useCurrentServer,
+    useFullScreenPlayerStore,
+    usePlayerData,
+    usePlayerStore,
+} from '/@/renderer/store';
 import { useSettingsStore } from '/@/renderer/store/settings.store';
 import { PlayerData, QueueSong } from '/@/shared/types/domain-types';
 
@@ -93,6 +100,53 @@ const scaleImageUrl = (imageSize: number, url?: null | string) => {
         .replace(/&height=\d+/, `&height=${imageSize}`);
 };
 
+// Helper function to extract musical key from song tags
+const extractKey = (song?: null | QueueSong): null | string => {
+    if (!song?.tags) return null;
+
+    const rawKeyValue =
+        song.tags.initialkey?.[0] ||
+        song.tags.key?.[0] ||
+        song.tags.INITIALKEY?.[0] ||
+        song.tags.KEY?.[0] ||
+        song.tags.musickey?.[0] ||
+        song.tags.MUSICKEY?.[0] ||
+        undefined;
+
+    if (rawKeyValue) {
+        // Try to decode if it looks like base64 JSON (Mixed In Key format)
+        if (rawKeyValue.length > 20 && !rawKeyValue.includes(' ')) {
+            try {
+                const decoded = atob(rawKeyValue);
+                const parsed = JSON.parse(decoded);
+                if (parsed.key) {
+                    return parsed.key;
+                }
+            } catch (e) {
+                // Failed to decode, fall through to use raw value
+            }
+        }
+
+        // If it's already a simple key format, use it directly
+        if (rawKeyValue.match(/^[0-9]{0,2}[A-G][#b]?[m]?$/)) {
+            return rawKeyValue;
+        }
+
+        return rawKeyValue;
+    }
+
+    return null;
+};
+
+// Helper function to format genres for display
+const formatGenres = (song?: null | QueueSong): null | string => {
+    if (!song?.genres || song.genres.length === 0) return null;
+
+    // Take first 2-3 genres to avoid overcrowding
+    const displayGenres = song.genres.slice(0, 3);
+    return displayGenres.map((genre) => genre.name).join(', ');
+};
+
 const ImageWithPlaceholder = ({
     useAspectRatio,
     ...props
@@ -128,10 +182,30 @@ export const FullScreenPlayerImage = () => {
     const [mainImageDimensions, setMainImageDimensions] = useState({ idealSize: 1 });
 
     const albumArtRes = useSettingsStore((store) => store.general.albumArtRes);
+    const server = useCurrentServer();
 
     const { queue } = usePlayerData();
     const { useImageAspectRatio } = useFullScreenPlayerStore();
     const currentSong = queue.current;
+
+    // Fetch full song details if tags are missing (for key extraction)
+    const songDetailQuery = useQuery({
+        enabled: !!currentSong?.id && !currentSong?.tags && !!server,
+        queryFn: async ({ signal }) => {
+            if (!server || !currentSong?.id) throw new Error('No server or song available');
+
+            return api.controller.getSongDetail({
+                apiClientProps: { server, signal },
+                query: { id: currentSong.id },
+            });
+        },
+        queryKey: ['fullScreenSongDetail', currentSong?.id, server?.id],
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
+
+    // Use detailed song data if available, otherwise use the original current song
+    const songWithDetails = songDetailQuery.data || currentSong;
+
     const { color: background } = useFastAverageColor({
         algorithm: 'dominant',
         src: queue.current?.imageUrl,
@@ -315,6 +389,11 @@ export const FullScreenPlayerImage = () => {
                 <Group
                     mt="sm"
                     position="center"
+                    sx={{
+                        flexWrap: 'wrap',
+                        gap: '0.5rem',
+                        justifyContent: 'center',
+                    }}
                 >
                     {currentSong?.container && (
                         <Badge size="lg">
@@ -323,6 +402,13 @@ export const FullScreenPlayerImage = () => {
                     )}
                     {currentSong?.releaseYear && (
                         <Badge size="lg">{currentSong?.releaseYear}</Badge>
+                    )}
+                    {songWithDetails?.bpm && <Badge size="lg">{songWithDetails.bpm} BPM</Badge>}
+                    {extractKey(songWithDetails) && (
+                        <Badge size="lg">{extractKey(songWithDetails)}</Badge>
+                    )}
+                    {formatGenres(songWithDetails) && (
+                        <Badge size="lg">{formatGenres(songWithDetails)}</Badge>
                     )}
                 </Group>
             </MetadataContainer>
